@@ -21,32 +21,21 @@ class QuizSeeder extends Seeder
             "description" => "This is a quiz to test the quiz functionality."
         ]);
 
-        Question::create([
-            "quiz_id" => $quiz->id,
-            "type" => "multiple_choice",
-            "image" => null,
-            "message" => "How many licks does it take to get to the center of a tootsie pop?",
-            "choices" => [
-                [
-                    "choice" => "Test choice #1",
-                    "correct" => false
-                ],
-                [
-                    "choice" => "Test choice #2",
-                    "correct" => true
-                ]
-            ]
-        ]);
-
-        for($i = 0; $i < 100; $i++) {
+        for($i = 0; $i < 15; $i++) {
             Question::create([
                 "quiz_id" => $quiz->id,
                 "type" => "true_false",
                 "image" => null,
                 "message" => "Question " . $i,
                 "choices" => [
-                    "True" => true,
-                    "False" => false
+                    [
+                        "choice" => "True",
+                        "correct" => false
+                    ],
+                    [
+                        "choice" => "False",
+                        "correct" => true
+                    ]
                 ]
             ]);
         }

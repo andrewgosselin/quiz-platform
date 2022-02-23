@@ -1,36 +1,134 @@
-<x-guest-layout>
+<x-blank-layout>
     <x-slot name="scripts">
         <script>
-            function startQuiz() {
-                $("#startPage").css("display", "none");
-                $("#questionPages .questionPage").removeClass("active");
-                $("#questionPages .questionPage").first().addClass("active");
+            var session = @json($session ?? null);
+            var endScreen = false;
+            $( document ).ready(function() {
+                if(session !== null) {
+                    setAnswers();
+                    goToQuestion(session.current_question, true);
+                    
+                }
 
-                $("#previousQuestionButton").css("display", "none");
-                $("#nextQuestionButton").css("display", "initial");
-                $("#startQuizButton").css("display", "none");
+                $("input.choice").on("change", function() {
+                    updateSession();
+                });
+            });
+
+            function startQuiz() {
+                $.ajax({
+                    type:'POST',
+                    url: "{{ route('session.create') }}",
+                    data: {},
+                    success:function(data){
+                        window.session = data;
+                        $("#startPage").css("display", "none");
+                        $("#endPage").css("display", "none");
+                        $("#questionPages .questionPage").removeClass("active");
+                        $("#questionPages .questionPage").first().addClass("active");
+
+                        $("#previousQuestionButton").css("display", "none");
+                        $("#nextQuestionButton").css("display", "initial");
+                        $("#startQuizButton").css("display", "none");
+                    }
+                });
+                
+            }
+
+            function updateSession() {
+                var current_question = window.endScreen ? -5 : parseInt($(".questionPage.active").attr("questionIndex"));
+                let data = {
+                    current_question: current_question,
+                    answers: getAnswers()
+                };
+                console.log(data);
+                $.ajax({
+                    type:'POST',
+                    url: "{{ route('session.update') }}",
+                    data: data,
+                    success:function(data){
+                        window.session = data;
+                        console.log("Updated session.");
+                    }
+                });
             }
 
             function nextQuestion() {
                 let current = $(".questionPage.active").attr("questionIndex");
-                $(".questionPage").removeClass("active");
-                $(`.questionPage[questionIndex=${parseInt(current) + 1}]`).addClass("active");
-                if((parseInt(current) + 1) > 0) {
-                    $("#previousQuestionButton").css("display", "initial");
-                    $("#nextQuestionButton").css("display", "initial");
-                } else if(parseInt(current) + 1 == ($(".questionPage").length - 1)) {
-                    $("#previousQuestionButton").css("display", "initial");
-                    $("#nextQuestionButton").css("display", "none");
+                if(parseInt(current) == ($(`.questionPage`).length - 1)) {
+                    goToEndScreen();
+                } else {
+                    goToQuestion(parseInt(current) + 1);
                 }
             }
             function previousQuestion() {
                 let current = $(".questionPage.active").attr("questionIndex");
-                $(".questionPage").removeClass("active");
-                $(`.questionPage[questionIndex=${parseInt(current) - 1}]`).addClass("active");
-                if((parseInt(current) - 1) == 0) {
-                    $("#previousQuestionButton").css("display", "none");
-                    $("#nextQuestionButton").css("display", "initial");
+                goToQuestion(parseInt(current) - 1);
+            }
+
+            function goToQuestion(question, skipUpdate = false) {
+                $("#startPage").css("display", "none");
+                $("#startQuizButton").css("display", "none");
+                console.log($(`.questionPage[questionIndex=${question}]`));
+                
+                if(question == -5) {
+                    goToEndScreen();
+                } else if($(`.questionPage[questionIndex=${question}]`).length > 0) {
+                    $(".questionPages").css("display", "initial");
+                    let current = $(".questionPage.active").attr("questionIndex");
+                    $(".questionPage").removeClass("active");
+                    $(`.questionPage[questionIndex=${question}]`).addClass("active");
+                    if(question == 0) {
+                        $("#previousQuestionButton").css("display", "none");
+                        $("#nextQuestionButton").css("display", "initial");
+                    } else if(question > 0) {
+                        $("#previousQuestionButton").css("display", "initial");
+                        $("#nextQuestionButton").css("display", "initial");
+                    }
+                    if(skipUpdate == false) {
+                        updateSession();
+                    }
                 }
+                
+            }
+
+            function goToEndScreen() {
+                window.endScreen = true;
+                $("#questionPages").css("display", "none");
+                $(".questionPage").removeClass("active");
+                $("#endPage").css("display", "initial");
+                updateSession();
+            }
+
+            function setAnswers() {
+                let answers = session.answers;
+                if(answers !== undefined && answers !== null) {
+                    console.log(answers);
+                    for(let answerIndex = 0; answerIndex < answers.length; answerIndex++) {
+                        for(let choiceIndex = 0; choiceIndex < answers[answerIndex].length; choiceIndex++) {
+                            if(answers[answerIndex][choiceIndex].selected) {
+                                console.log(`#question${answerIndex}-choice${choiceIndex}`)
+                                $(`#question${answerIndex}-choice${choiceIndex}`)[0].checked = (answers[answerIndex][choiceIndex].selected == "true");
+                            }
+                        }
+                        
+                    }
+                }
+            }
+
+            function getAnswers() {
+                let answers = [];
+                $(".questionPage").each(function(index) {
+                    var choices = [];
+                    $(this).find(".choice").each(function(choiceIndex) {
+                        choices[choiceIndex] = {
+                            selected: this.checked
+                        };
+                    });
+                    answers[index] = choices;
+                });
+                console.log(answers);
+                return answers;
             }
         </script>
     </x-slot>
@@ -42,6 +140,9 @@
         }
 
         #startPage {
+            padding: 10px;
+        }
+        #endPage {
             padding: 10px;
         }
 
@@ -116,38 +217,44 @@
                             <div class="answerBox">
                                 <div class="answers">
                                     <h5>Answer</h5>
-                                    @switch($question->type)
-                                        @case("multiple_choice")
-                                            @if($question->select_multiple)
-                                                @foreach($question->choices as $choiceIndex => $choice)
-                                                {{$choiceIndex}} {{$choice["choice"]}}
-                                                @endforeach
-                                            @else
+                                    <fieldset id="questionGroup{{$questionIndex}}">
+                                        @switch($question->type)
+                                            @case("multiple_choice")
+                                                @if($question->select_multiple)
+                                                    @foreach($question->choices as $choiceIndex => $choice)
+                                                    {{$choiceIndex}} {{$choice["choice"]}}
+                                                    @endforeach
+                                                @else
+                                                    @foreach($question->choices as $choiceIndex => $choice)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
+                                                            <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                {{$choice["choice"]}}
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                                @break
+                                            @case("true_false")
                                                 @foreach($question->choices as $choiceIndex => $choice)
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
+                                                        <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
                                                         <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
                                                             {{$choice["choice"]}}
                                                         </label>
                                                     </div>
                                                 @endforeach
-                                            @endif
-                                            @break
-                                        @case("true_false")
-                                            @foreach($question->choices as $choiceIndex => $choice)
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
-                                                    <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                        {{$choiceIndex}}
-                                                    </label>
-                                                </div>
-                                            @endforeach
-                                            @break
-                                    @endswitch
+                                                @break
+                                        @endswitch
+                                    </fieldset>
                                 </div>
                             </div>
                         </div>
                     @endforeach
+                </div>
+                <div id="endPage" style="display: none;">
+                    <h5 class="card-title">This is the end</h5>
+                    <p class="card-text">{{$quiz->description}}</p>
                 </div>
             </div>
             <div class="card-footer">
@@ -157,4 +264,4 @@
             </div>
         </div>
     </div>
-</x-guest-layout>
+</x-blank-layout>

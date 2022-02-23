@@ -95,9 +95,56 @@ Route::delete('/quizzes/{id?}', function ($id) {
 
 Route::get('/start/{id?}', function ($id) {
     $quiz = \App\Models\Quiz::findOrFail($id);
+    if(session()->has("session_id")) {
+        $session = \App\Models\Session::where("session_id", session()->get("session_id"))->first();
+    }
     return view("pages.quiz.session")
-        ->with("quiz", $quiz);
+        ->with("quiz", $quiz)
+        ->with("session", $session ?? null);
 })->middleware(['auth'])->name('quizzes.delete');
+
+
+Route::get('/clearSession', function () {
+    session()->put("session_id");
+})->middleware(['auth'])->name('session.flush');
+
+Route::post('/session/create', function () {
+    $session_id = \Illuminate\Support\Str::random(15);
+    \App\Models\Session::create([
+        "session_id" => $session_id
+    ]);
+    session()->put("session_id", $session_id);
+    session()->save();
+})->middleware(['auth'])->name('session.create');
+
+Route::post('/session/update', function () {
+    if(session()->has("session_id")) {
+        $session_id = session()->get("session_id");
+        $session = \App\Models\Session::where("session_id", $session_id)->first();
+        if($session) {
+            $data = request()->all();
+            $data["status"] = "in progress";
+            $session->update($data);
+            return $session;
+        } else {
+            abort(404, "Session not found.");
+        }
+    }
+})->middleware(['auth'])->name('session.update');
+Route::post('/session/complete', function () {
+    if(session()->has("session_id")) {
+        $session_id = session()->get("session_id");
+        $session = \App\Models\Session::where("session_id", $session_id)->first();
+        if($session) {
+            $data = request()->all();
+            $data["status"] = "complete";
+            $session->update($data);
+            return $session;
+        } else {
+            abort(404, "Session not found.");
+        }
+    }
+})->middleware(['auth'])->name('session.complete');
 
 Route::get('image-upload', [ ImageUploadController::class, 'imageUpload' ])->name('image.upload');
 Route::post('image-upload', [ ImageUploadController::class, 'imageUploadPost' ])->name('image.upload.post');
