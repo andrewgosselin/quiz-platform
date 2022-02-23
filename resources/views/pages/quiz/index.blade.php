@@ -1,0 +1,51 @@
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            {{ __('Quizzes') }}
+        </h2>
+    </x-slot>
+
+    <x-slot name="scripts">
+        <script>
+            function deleteQuiz(id) {
+                $.ajax({
+                    type:'DELETE',
+                    url:"{{ route('quizzes.delete') }}/" + id,
+                    success:function(data){
+                        $("#quiz-" + id).remove();
+                    }
+                });
+            }
+        </script>
+    </x-slot>
+
+    <div class="pt-4">
+        <div class="quizList">
+            <a type="button" class="btn btn-success" href="/quizzes/create">New Quiz</a>
+            <table class="table table-striped datatable">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Questions</th>
+                        <th scope="col">Current Sessions</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($quizzes as $quiz)
+                        <tr id="quiz-{{$quiz->id}}">
+                            <td>{{$quiz->name}}</td>
+                            <td>{{$quiz->questions->count()}}</td>
+                            <td>0</td>
+                            <td>
+                                <a type="button" class="btn btn-primary" href="/quizzes/{{$quiz->id}}">Edit</a>
+                                <a type="button" class="btn btn-info">Share</a>
+                                <a type="button" class="btn btn-danger" onclick="deleteQuiz('{{$quiz->id}}')">Delete</a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</x-app-layout>
