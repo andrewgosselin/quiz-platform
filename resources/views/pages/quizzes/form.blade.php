@@ -34,6 +34,23 @@
             float:left;
             margin-top: 5px;
         }
+        .questionImageContainer {
+            width: 100%;
+            height: 160px;
+            border: 1px solid gray;
+            background-color: lightgrey;
+            position: relative;
+            text-align: center;
+        }
+        .questionImageContainer img {
+            width: auto;
+            height: 100%;
+        }
+        .questionImageContainer button {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
     </style>
     
     <x-slot name="header">
@@ -52,7 +69,9 @@
         <script>
             $( document ).ready(function() {
                 $("#questionsTable").tableDnD();
-
+                $('#questionImageUploadButton').click(function(){ 
+                    $('#questionImageUploadInput').trigger('click'); 
+                });
                 $("#questionTypeInput").on("change", function() {
                     if($(this).val() == "multiple_choice") {
                         $('#trueFalseSection').css("display", "none");
@@ -63,6 +82,14 @@
                     }
                 });
             });
+
+            function loadFile(event) {
+                var output = $(".questionImageContainer img")[0];
+                output.src = URL.createObjectURL(event.target.files[0]);
+                output.onload = function() {
+                    URL.revokeObjectURL(output.src) // free memory
+                }
+            }
 
             function addChoice(choice = "", choice_correct = false) {
                 $("#choicesTable tbody").append(`
@@ -81,22 +108,24 @@
             }
 
             function getQuestionData() {
-                let data = {
-                    message: $("#questionMessageInput").val(),
-                    type: $("#questionTypeInput").val()
-                };
-                if(data.type == "multiple_choice") {
-                    data.choices = [];
+                var data = new FormData();
+                data.append('message', $("#questionMessageInput").val());
+                data.append('type', $("#questionTypeInput").val());
+                data.append('image_file', $('#questionImageUploadInput')[0].files[0]); 
+                
+                if(data.get("type") == "multiple_choice") {
+                    let choices = [];
                     $("#choicesTable tbody tr").each(function( index ) {
-                        data.choices[index] = {
+                        choices[index] = {
                             choice: $(this).find(".choiceInput").val(),
                             correct: $(this).find(".choiceCorrectInput")[0].checked
                         };
                     });
-                    data.select_multiple = $("#selectMultipleInput")[0].checked ? 1 : 0;
-                } else if(data.type == "true_false") {
+                    data.append('choices', JSON.stringify(choices));
+                    data.append('select_multiple', $("#selectMultipleInput")[0].checked ? 1 : 0);
+                } else {
                     let trueCorrect = $("#trueCorrectInput")[0].checked;
-                    data.choices = [
+                    let choices = [
                         {
                             choice: "True",
                             correct: trueCorrect
@@ -106,7 +135,8 @@
                             correct: !trueCorrect
                         }
                     ];
-                    data.select_multiple = 0;
+                    data.append('choices', JSON.stringify(choices));
+                    data.append('select_multiple', 0);
                 }
                 return data;
             }
@@ -116,8 +146,19 @@
                     type:'POST',
                     url:"{{ route('question.create', $quiz->id ?? '-1') }}",
                     data: getQuestionData(),
+                    contentType: false,
+                    processData: false,
                     success:function(data){
-                        console.log(data);
+                        $("#questionsTable tbody").append(`
+                            <tr questionId="${data.id}">
+                                <td>${data.message}</td>
+                                <td>${data.type}</td>
+                                <td>
+                                    <a type="button" class="btn btn-primary" onclick="openEditQuestion('${data.id}')">Edit</a>
+                                    <a type="button" class="btn btn-danger" onclick="deleteQuestion('${data.id}')">Delete</a>
+                                </td>
+                            </tr>
+                        `);
                         $("#questionModal").modal("hide");
                     }
                 });
@@ -128,6 +169,7 @@
                     type:'DELETE',
                     url:"{{ route('question.delete', ['id' => $quiz->id ?? '-1']) }}/" + id,
                     success:function(data){
+                        $(`tr[questionId=${id}]`).remove();
                     }
                 });
             }
@@ -139,6 +181,8 @@
                     type:'POST',
                     url: "{{ route('question.update', ['id' => $quiz->id ?? '-1']) }}/" + id,
                     data: getQuestionData(),
+                    contentType: false,
+                    processData: false,
                     success:function(data){
                         $("#questionModal").modal("hide");
                     }
@@ -152,7 +196,7 @@
                     success:function(data){;
                         $("#editedQuestionId").val(id);
                         console.log(data);
-                        openQuestionModal("edit", data.message, data.type, data.choices, data.select_multiple);
+                        openQuestionModal("edit", "/storage/question/" + data.id + "/" + data.image, data.message, data.type, data.choices, data.select_multiple);
                     }
                 });
             }
@@ -161,12 +205,12 @@
                 openQuestionModal("new");
             }
 
-            function openQuestionModal(operation, message = "", type = "multiple_choice", extra1 = [], extra2 = false) {
+            function openQuestionModal(operation, image = "", message = "", type = "multiple_choice", extra1 = [], extra2 = false) {
                 $('.editQuestionForm').css('display', 'none');
                 $('.newQuestionForm').css('display', 'none');
                 $('.' + operation + 'QuestionForm').css('display', 'initial');
 
-
+                $('.questionImageContainer img')[0].src = image;
                 $("#questionMessageInput").val(message);
                 $("#questionTypeInput").val(type).change();
                 if(type == "multiple_choice") {
@@ -202,7 +246,7 @@
                     data: data,
                     success:function(data){
                         @if($isEditing == true)
-                            // Show toast
+                            window.location.href = "/quizzes"
                         @else
                             window.location.href = "/quizzes/" + data.id;
                         @endif
@@ -267,6 +311,13 @@
             </div>
             <div class="modal-body">
                 <input id="editedQuestionId" style="display: none;" value="-1">
+                <div class="mb-3">
+                    <div class="questionImageContainer">
+                        <img>
+                        <button type="button" class="btn btn-primary" id="questionImageUploadButton">Upload...</button>
+                    </div>
+                    <input type="file" id="questionImageUploadInput" onchange="loadFile(event)" style="display:none"/> 
+                </div>
                 <div class="mb-3">
                     <label for="questionMessageInput" class="col-form-label">Question</label>
                     <input type="text" class="form-control" id="questionMessageInput">

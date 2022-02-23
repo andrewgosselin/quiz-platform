@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Quiz;
-use App\Models\Session;
 use Illuminate\Http\Request;
 
-class QuizController extends Controller
+use App\Models\Question;
+use App\Models\Quiz;
+
+class QuestionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -15,9 +16,7 @@ class QuizController extends Controller
      */
     public function index()
     {
-        $quizzes = Quiz::all();
-        return view('pages.quizzes.index')
-            ->with("quizzes", $quizzes);
+        //
     }
 
     /**
@@ -27,8 +26,7 @@ class QuizController extends Controller
      */
     public function create()
     {
-        return view('pages.quizzes.form')
-            ->with("isEditing", false);
+        //
     }
 
     /**
@@ -37,9 +35,22 @@ class QuizController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, $id)
     {
-        //
+        $data = request()->all();
+        $data["quiz_id"] = $id;
+        $data["choices"] = json_decode($data["choices"], true);
+        $question = Question::create($data);
+        if ($request->hasFile('image_file')) {
+            $request->validate([
+                'image_file' => 'mimes:jpeg,bmp,png'
+            ]);
+            $request->image_file->store('question/' . $question->id, 'public');
+            $data["image"] = $request->image_file->hashName();
+            unset($data["image_url"]);
+        }
+        $question->update($data);
+        return $question->toArray();
     }
 
     /**
@@ -48,9 +59,11 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($id, $question_id)
     {
-        //
+        $quiz = Quiz::findOrFail($id);
+        $question = $quiz->unordered_questions()->findOrFail($question_id ?? -1);
+        return $question->toArray();
     }
 
     /**
@@ -61,10 +74,7 @@ class QuizController extends Controller
      */
     public function edit($id)
     {
-        $quiz = Quiz::findOrFail($id);
-        return view('pages.quizzes.form')
-            ->with("isEditing", true)
-            ->with("quiz", $quiz);
+        //
     }
 
     /**
@@ -74,15 +84,13 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, $question_id)
     {
-        if($id == "new") {
-            $quiz = \App\Models\Quiz::create(request()->all());
-        } else {
-            $quiz = \App\Models\Quiz::findOrFail($id);
-            $quiz->update(request()->all());
-        }
-        return $quiz->toArray();
+        $quiz = Quiz::findOrFail($id);
+        $question = $quiz->unordered_questions()->findOrFail($question_id ?? -1);
+        $data = request()->all();
+        $question->update($data);
+        return $question->toArray();
     }
 
     /**
@@ -91,43 +99,22 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($id, $question_id)
     {
         $quiz = Quiz::findOrFail($id);
-        $quiz->delete();
+        $question = $quiz->unordered_questions()->findOrFail($question_id ?? -1);
+        $question->delete();
     }
 
-    public function start($id) {
-        $quiz = Quiz::findOrFail($id);
-        if(session()->has("session_id")) {
-            $session = Session::where("session_id", session()->get("session_id"))->first();
-            if($session) {
-                if(request()->has("newSession")) {
-                    $session->delete();
-                    $session = null;
-                    session()->put("session_id", null);
-                } else {
-                    $session = ($session->status == "completed" || $session->quiz_id !== (int)$id) ? null : $session;
-                }
-            }
-        }
-        return view("pages.quizzes.session")
-            ->with("quiz", $quiz)
-            ->with("session", $session ?? null);
-    }
-
-    
-
-    public function complete($id) {
+    public function complete() {
         if(session()->has("session_id")) {
             $session_id = session()->get("session_id");
             $session = \App\Models\Session::where("session_id", $session_id)->first();
             if($session) {
                 $data = request()->all();
                 $data["status"] = "complete";
+                $data["current_question"] = -1;
                 $session->update($data);
-                $session = \App\Models\Quiz::score($session);
-                session()->put("session_id", null);
                 return $session;
             } else {
                 abort(404, "Session not found.");

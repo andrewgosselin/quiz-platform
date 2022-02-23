@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>Quiz Platform</title>
 
         <!-- Fonts -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
@@ -13,6 +13,7 @@
         <!-- Styles -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/boxicons@latest/css/boxicons.min.css">
+        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css" rel="stylesheet">
 	
         <!-- Scripts -->
         <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js" integrity="sha384-7+zCNj/IqJ95wo16oMtfsKbZ9ccEh31eOz1HGyDuCQ6wgnyJNSYdrPa03rtR1zdB" crossorigin="anonymous"></script>
@@ -29,28 +30,24 @@
         
         @include('layouts.navigation')
     </head>
-    <body id="body-pd">
-        <header class="header" id="header">
-            <div class="header_toggle"> <i class='bx bx-menu' id="header-toggle"></i> </div>
+    <body id="body-pd" class="body-pd">
+        <header class="header body-pd" id="header">
+            <div class="header_toggle"> <i class='bx bx-menu bx-x' id="header-toggle"></i> </div>
             <div class="header_text">
                 {{ $header }}
             </div>
             {{-- <div class="header_balance" onclick="openDeposit()">${{auth()->user()->balance}}</div> --}}
             {{-- <div class="header_img"> <img src="https://i.imgur.com/hczKIze.jpg" alt=""> </div> --}}
         </header>
-        <div class="l-navbar" id="nav-bar">
+        <div class="l-navbar show" id="nav-bar">
             <nav class="nav">
                 <div> <a href="#" class="nav_logo"> <i class='bx bx-layer nav_logo-icon'></i> <span class="nav_logo-name">Quiz Platform</span> </a>
                     <div class="nav_list">
-                        <a href="/" class="nav_link {{\Request::routeIs('dashboard') ? "active" : ""}}">
-                            <i class='bx bx-grid-alt nav_icon'></i> 
-                            <span class="nav_name">Dashboard</span> 
-                        </a> 
                         <a href="/quizzes" class="nav_link {{\Request::routeIs('quizzes') ? "active" : ""}}"> 
                             <i class='bx bx-user nav_icon'></i> 
                             <span class="nav_name">Quizzes</span> 
                         </a>
-                        <a href="/results" class="nav_link {{\Request::routeIs('results') ? "active" : ""}}"> 
+                        <a href="/results" class="nav_link {{\Request::routeIs('session.results.index') ? "active" : ""}}"> 
                             <i class='bx bx-user nav_icon'></i> 
                             <span class="nav_name">Results</span> 
                         </a>

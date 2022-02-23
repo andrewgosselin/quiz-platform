@@ -20,6 +20,10 @@ class Quiz extends Model
         "questions_order" => "array"
     ];
 
+    public function share() {
+        
+    }
+
     public static function score($session) {
         $quiz = Quiz::find($session->quiz_id);
         $results = [];

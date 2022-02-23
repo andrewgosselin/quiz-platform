@@ -4,10 +4,10 @@
             var session = @json($session ?? null);
             var endScreen = false;
             $( document ).ready(function() {
+                history.pushState(null, "", location.href.split("?")[0]);
                 if(session !== null) {
                     setAnswers();
                     goToQuestion(session.current_question, true);
-                    
                 }
 
                 $("input.choice").on("change", function() {
@@ -63,7 +63,7 @@
                     url: "{{ route('quizzes.complete', $quiz->id) }}",
                     data: data,
                     success:function(data){
-                        console.log(data);
+                        window.location.href = "/results/" + data.session_id;
                     }
                 });
             }
@@ -117,6 +117,7 @@
                     let current = $(".questionPage.active").attr("questionIndex");
                     $(".questionPage").removeClass("active");
                     $(`.questionPage[questionIndex=${question}]`).addClass("active");
+                    $('#submitQuizButton').css("display", "none");
                     if(question == 0) {
                         $("#previousQuestionButton").css("display", "none");
                         $("#nextQuestionButton").css("display", "initial");
@@ -220,9 +221,9 @@
 
         .questionBox {
             padding: 10px;
+            height: 100px;
         }
         .answerBox {
-            background-color: lightgrey;
             display : table-row;
             vertical-align : bottom;
         }
@@ -233,6 +234,20 @@
         label.required:after {
             content:" *";
             color:red;
+        }
+
+        .questionImage {
+            width: 100%;
+            height: 160px;
+            border: 1px solid gray;
+            background-color: lightgrey;
+            position: relative;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .questionImage img {
+            width: auto;
+            height: 100%;
         }
     </style>
 
@@ -251,14 +266,13 @@
                 <div id="questionPages">
                     @foreach($quiz->questions as $questionIndex => $question)
                         <div class="questionPage" questionId="{{$question->id}}" questionIndex="{{$questionIndex}}">
-                            @if($question->image && $question->image !== "")
-                                <div class="questionBox">
-                                    <img src="{{$question->image}}">
-                                </div>
-                            @endif
-                            
                             <div class="questionBox">
-                                <h5>Question</h5>
+                                @if($question->image)
+                                    <div class="questionImage">
+                                        <img src="/storage/question/{{$question->id}}/{{$question->image}}"> 
+                                    </div>
+                                @endif
+                                <h5>Question #{{$questionIndex + 1}}</h5>
                                 <p>{{$question->message}}</p>
                             </div>
                             <div class="answerBox">
@@ -269,7 +283,12 @@
                                             @case("multiple_choice")
                                                 @if($question->select_multiple)
                                                     @foreach($question->choices as $choiceIndex => $choice)
-                                                    {{$choiceIndex}} {{$choice["choice"]}}
+                                                        <div class="form-check">
+                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="checkbox" value="" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                            <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                {{$choice["choice"]}}
+                                                            </label>
+                                                        </div>
                                                     @endforeach
                                                 @else
                                                     @foreach($question->choices as $choiceIndex => $choice)

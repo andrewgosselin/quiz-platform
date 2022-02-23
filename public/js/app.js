@@ -222,7 +222,7 @@ var require_shared_cjs = __commonJS((exports) => {
           escaped = "&lt;";
           break;
         case 62:
-          escaped = "&gt;";
+          escaped = ">";
           break;
         default:
           continue;
@@ -5964,7 +5964,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
   var htmlEscapes = {
     '&': '&amp;',
     '<': '&lt;',
-    '>': '&gt;',
+    '>': '>',
     '"': '&quot;',
     "'": '&#39;'
   };
@@ -5973,7 +5973,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
   var htmlUnescapes = {
     '&amp;': '&',
     '&lt;': '<',
-    '&gt;': '>',
+    '>': '>',
     '&quot;': '"',
     '&#39;': "'"
   };
@@ -20344,7 +20344,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
      * // Use the HTML "escape" delimiter to escape data property values.
      * var compiled = _.template('<b><%- value %></b>');
      * compiled({ 'value': '<script>' });
-     * // => '<b>&lt;script&gt;</b>'
+     * // => '<b>&lt;script></b>'
      *
      * // Use the "evaluate" delimiter to execute JavaScript and generate HTML.
      * var compiled = _.template('<% _.forEach(users, function(user) { %><li><%- user %></li><% }); %>');
@@ -20767,7 +20767,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
     /**
      * The inverse of `_.escape`; this method converts the HTML entities
-     * `&amp;`, `&lt;`, `&gt;`, `&quot;`, and `&#39;` in `string` to
+     * `&amp;`, `&lt;`, `>`, `&quot;`, and `&#39;` in `string` to
      * their corresponding characters.
      *
      * **Note:** No other HTML entities are unescaped. To unescape additional
