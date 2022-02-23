@@ -185,10 +185,17 @@
             function submitQuiz() {
                 let data = {
                     name: $("#nameInput").val(),
-                    description: $("#descriptionInput").val(),
-                    question_order: $("#questionOrderInput").val()
+                    description: $("#descriptionInput").val()
                 };
-                
+
+                @if($isEditing == true)
+                    data.questions_order = [];
+                    $("#questionsTable tr").each(function(index) {
+                        let questionId = $(this).attr("questionId");
+                        data.questions_order.push(questionId);
+                    });
+                @endif
+
                 $.ajax({
                     type:'POST',
                     url:"{{ route('quiz.update', ['id' => $quiz->id ?? 'new']) }}",
@@ -214,14 +221,6 @@
             <label for="descriptionInput" class="form-label">Description</label>
             <textarea class="form-control" id="descriptionInput" rows="3">{{$quiz->description ?? ""}}</textarea>
         </div>
-        
-        <div class="mb-3" @if($isEditing !== true) style="display: none" @endif>
-            <label for="questionOrderInput" class="form-label">Question Order</label>
-            <select class="form-select" aria-label="Default select example" id="questionOrderInput">
-                <option value="random" @if($quiz->question_order ?? "" == "random") selected @endif>Random</option>
-                <option value="ordered" @if($quiz->question_order ?? "" == "ordered") selected @endif>Ordered</option>
-            </select>
-        </div>
 
         @if($isEditing == true) 
             <div class="mb-3">
@@ -241,7 +240,7 @@
                         </thead>
                         <tbody>
                             @foreach($quiz->questions ?? [] as $index => $question)
-                                <tr>
+                                <tr questionId="{{$question->id}}">
                                     <td>{{$question->message}}</td>
                                     <td>{{$question->type}}</td>
                                     <td>

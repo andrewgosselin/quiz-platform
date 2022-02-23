@@ -21,13 +21,14 @@
 
     <div class="pt-4">
         <div class="quizList">
-            <a type="button" class="btn btn-success" href="/quizzes/create">New Quiz</a>
+            <a type="button" class="btn btn-success mb-4" href="/quizzes/create">New Quiz</a>
             <table class="table table-striped datatable">
                 <thead>
                     <tr>
                         <th scope="col">Name</th>
                         <th scope="col">Questions</th>
-                        <th scope="col">Current Sessions</th>
+                        <th scope="col">Active Sessions</th>
+                        <th scope="col">Completed Sessions</th>
                         <th scope="col"></th>
                     </tr>
                 </thead>
@@ -36,7 +37,8 @@
                         <tr id="quiz-{{$quiz->id}}">
                             <td>{{$quiz->name}}</td>
                             <td>{{$quiz->questions->count()}}</td>
-                            <td>0</td>
+                            <td>{{$quiz->sessions->where("status", "in progress")->count()}}</td>
+                            <td>{{$quiz->sessions->where("status", "complete")->count()}}</td>
                             <td>
                                 <a type="button" class="btn btn-primary" href="/quizzes/{{$quiz->id}}">Edit</a>
                                 <a type="button" class="btn btn-info">Share</a>

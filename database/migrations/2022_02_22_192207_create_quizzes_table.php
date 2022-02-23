@@ -17,7 +17,7 @@ class CreateQuizzesTable extends Migration
             $table->increments('id');
             $table->string("name");
             $table->string("description")->default("");
-            $table->string("question_order")->default("random");
+            $table->json("questions_order")->nullable();
             $table->timestamps();
         });
     }

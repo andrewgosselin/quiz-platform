@@ -19,7 +19,9 @@
                 $.ajax({
                     type:'POST',
                     url: "{{ route('session.create') }}",
-                    data: {},
+                    data: {
+                        quiz_id: "{{$quiz->id ?? ''}}"
+                    },
                     success:function(data){
                         window.session = data;
                         $("#startPage").css("display", "none");
@@ -33,6 +35,37 @@
                     }
                 });
                 
+            }
+
+            function submitQuiz() {
+                let data = {
+                    answers: getAnswers(),
+                    first_name: $('#firstNameInput').val(),
+                    last_name: $('#lastNameInput').val(),
+                    email: $('#emailInput').val(),
+                    phone_number: $('#phoneNumberInput').val(),
+                    address_1: $('#addressOneInput').val(),
+                    address_2: $('#addressTwoInput').val(),
+                    city: $('#cityInput').val(),
+                    state: $('#stateInput').val(),
+                    zip: $('#zipInput').val()
+                };
+                let required = ["first_name", "last_name", "email", "phone_number"];
+                for(let i = 0; i < required.length; i++) {
+                    if(data[required[i]] == "" || data[required[i]] == undefined) {
+                        $("#endPageError").html("Not all required fields are filled!");
+                        $("#endPageError").css("display", "block");
+                        return;
+                    }
+                }
+                $.ajax({
+                    type:'POST',
+                    url: "{{ route('quizzes.complete', $quiz->id) }}",
+                    data: data,
+                    success:function(data){
+                        console.log(data);
+                    }
+                });
             }
 
             function updateSession() {
@@ -63,7 +96,11 @@
             }
             function previousQuestion() {
                 let current = $(".questionPage.active").attr("questionIndex");
-                goToQuestion(parseInt(current) - 1);
+                if(window.endScreen) {
+                    goToQuestion($(".questionPage").length - 1);
+                } else {
+                    goToQuestion(parseInt(current) - 1);
+                }
             }
 
             function goToQuestion(question, skipUpdate = false) {
@@ -74,7 +111,9 @@
                 if(question == -5) {
                     goToEndScreen();
                 } else if($(`.questionPage[questionIndex=${question}]`).length > 0) {
-                    $(".questionPages").css("display", "initial");
+                    $("#endPage").css("display", "none");
+                    window.endScreen = false;
+                    $("#questionPages").css("display", "initial");
                     let current = $(".questionPage.active").attr("questionIndex");
                     $(".questionPage").removeClass("active");
                     $(`.questionPage[questionIndex=${question}]`).addClass("active");
@@ -94,9 +133,12 @@
 
             function goToEndScreen() {
                 window.endScreen = true;
+                $("#previousQuestionButton").css("display", "initial");
+                $("#nextQuestionButton").css("display", "none");
                 $("#questionPages").css("display", "none");
                 $(".questionPage").removeClass("active");
-                $("#endPage").css("display", "initial");
+                $("#endPage").css("display", "block");
+                $("#submitQuizButton").css("display", "initial");
                 updateSession();
             }
 
@@ -143,7 +185,7 @@
             padding: 10px;
         }
         #endPage {
-            padding: 10px;
+            padding: 15px;
         }
 
         .card-body {
@@ -186,6 +228,11 @@
         }
         .answers {
             padding: 10px;
+        }
+
+        label.required:after {
+            content:" *";
+            color:red;
         }
     </style>
 
@@ -253,14 +300,116 @@
                     @endforeach
                 </div>
                 <div id="endPage" style="display: none;">
-                    <h5 class="card-title">This is the end</h5>
-                    <p class="card-text">{{$quiz->description}}</p>
+                    <div class="alert alert-danger" role="alert" id="endPageError" style="display: none;"></div>
+                    <h5 class="card-title">Details</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="required" for="firstNameInput">First Name</label>
+                            <input type="text" class="form-control" id="firstNameInput" placeholder="First name">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="required" for="lastNameInput">Last name</label>
+                            <input type="text" class="form-control" id="lastNameInput" placeholder="Last name">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="required" for="emailInput">Email</label>
+                            <input type="email" class="form-control" id="emailInput" placeholder="Email">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="required" for="phoneNumberInput">Phone Number</label>
+                            <input type="tel" class="form-control" id="phoneNumberInput" placeholder="Phone number">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="addressOneInput">Address</label>
+                            <input type="text" class="form-control" id="addressOneInput" placeholder="1234 Main St">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="addressTwoInput">Address 2</label>
+                            <input type="text" class="form-control" id="addressTwoInput" placeholder="Apartment, studio, or floor">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="cityInput">City</label>
+                            <input type="text" class="form-control" id="cityInput">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="stateInput">State</label>
+                            <select id="stateInput" class="form-control">
+                                <option selected>Choose...</option>
+                                <option value="AL">Alabama</option>
+                                <option value="AK">Alaska</option>
+                                <option value="AZ">Arizona</option>
+                                <option value="AR">Arkansas</option>
+                                <option value="CA">California</option>
+                                <option value="CO">Colorado</option>
+                                <option value="CT">Connecticut</option>
+                                <option value="DE">Delaware</option>
+                                <option value="DC">District Of Columbia</option>
+                                <option value="FL">Florida</option>
+                                <option value="GA">Georgia</option>
+                                <option value="HI">Hawaii</option>
+                                <option value="ID">Idaho</option>
+                                <option value="IL">Illinois</option>
+                                <option value="IN">Indiana</option>
+                                <option value="IA">Iowa</option>
+                                <option value="KS">Kansas</option>
+                                <option value="KY">Kentucky</option>
+                                <option value="LA">Louisiana</option>
+                                <option value="ME">Maine</option>
+                                <option value="MD">Maryland</option>
+                                <option value="MA">Massachusetts</option>
+                                <option value="MI">Michigan</option>
+                                <option value="MN">Minnesota</option>
+                                <option value="MS">Mississippi</option>
+                                <option value="MO">Missouri</option>
+                                <option value="MT">Montana</option>
+                                <option value="NE">Nebraska</option>
+                                <option value="NV">Nevada</option>
+                                <option value="NH">New Hampshire</option>
+                                <option value="NJ">New Jersey</option>
+                                <option value="NM">New Mexico</option>
+                                <option value="NY">New York</option>
+                                <option value="NC">North Carolina</option>
+                                <option value="ND">North Dakota</option>
+                                <option value="OH">Ohio</option>
+                                <option value="OK">Oklahoma</option>
+                                <option value="OR">Oregon</option>
+                                <option value="PA">Pennsylvania</option>
+                                <option value="RI">Rhode Island</option>
+                                <option value="SC">South Carolina</option>
+                                <option value="SD">South Dakota</option>
+                                <option value="TN">Tennessee</option>
+                                <option value="TX">Texas</option>
+                                <option value="UT">Utah</option>
+                                <option value="VT">Vermont</option>
+                                <option value="VA">Virginia</option>
+                                <option value="WA">Washington</option>
+                                <option value="WV">West Virginia</option>
+                                <option value="WI">Wisconsin</option>
+                                <option value="WY">Wyoming</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="zipInput">Zip</label>
+                            <input type="text" class="form-control" id="zipInput">
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-footer">
-                <button type="button" class="btn btn-primary float-start" onclick="previousQuestion()" style="display: none;" id="previousQuestionButton">Previous Question</button>
+                <button type="button" class="btn btn-danger float-start" onclick="previousQuestion()" style="display: none;" id="previousQuestionButton">Previous Question</button>
                 <button type="button" class="btn btn-primary float-end" onclick="nextQuestion()" style="display: none;" id="nextQuestionButton">Next Question</button>
                 <button type="button" class="btn btn-primary float-end" onclick="startQuiz()" id="startQuizButton">Start Quiz</button>
+                <button type="button" class="btn btn-success float-end" onclick="submitQuiz()" style="display: none;" id="submitQuizButton">Submit Quiz</button>
             </div>
         </div>
     </div>

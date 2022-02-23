@@ -41,6 +41,7 @@ Route::get('/quizzes/create', function () {
 
 Route::get('/quizzes/{id}', function ($id) {
     $quiz = \App\Models\Quiz::findOrFail($id);
+    // dd($quiz->questions);
     return view('pages.quiz.form')
         ->with("isEditing", true)
         ->with("quiz", $quiz);
@@ -93,15 +94,34 @@ Route::delete('/quizzes/{id?}', function ($id) {
     $quiz->delete();
 })->middleware(['auth'])->name('quizzes.delete');
 
+Route::post('/quizzes/{id}/complete', function ($id) {
+    if(session()->has("session_id")) {
+        $session_id = session()->get("session_id");
+        $session = \App\Models\Session::where("session_id", $session_id)->first();
+        if($session) {
+            $data = request()->all();
+            $data["status"] = "in progress";
+            $session->update($data);
+            $session = \App\Models\Quiz::score($session);
+            return $session;
+        } else {
+            abort(404, "Session not found.");
+        }
+    }
+})->middleware(['auth'])->name('quizzes.complete');
+
 Route::get('/start/{id?}', function ($id) {
     $quiz = \App\Models\Quiz::findOrFail($id);
     if(session()->has("session_id")) {
         $session = \App\Models\Session::where("session_id", session()->get("session_id"))->first();
+        if($session) {
+            $session = ($session->status == "completed" || $session->quiz_id !== (int)$id) ? null : $session;
+        }
     }
     return view("pages.quiz.session")
         ->with("quiz", $quiz)
         ->with("session", $session ?? null);
-})->middleware(['auth'])->name('quizzes.delete');
+})->middleware(['auth'])->name('quizzes.start');
 
 
 Route::get('/clearSession', function () {
@@ -111,6 +131,7 @@ Route::get('/clearSession', function () {
 Route::post('/session/create', function () {
     $session_id = \Illuminate\Support\Str::random(15);
     \App\Models\Session::create([
+        "quiz_id" => request()->get("quiz_id"),
         "session_id" => $session_id
     ]);
     session()->put("session_id", $session_id);
@@ -123,6 +144,7 @@ Route::post('/session/update', function () {
         $session = \App\Models\Session::where("session_id", $session_id)->first();
         if($session) {
             $data = request()->all();
+            $data["score"] = [];
             $data["status"] = "in progress";
             $session->update($data);
             return $session;
@@ -138,6 +160,7 @@ Route::post('/session/complete', function () {
         if($session) {
             $data = request()->all();
             $data["status"] = "complete";
+            $data["current_question"] = -1;
             $session->update($data);
             return $session;
         } else {
