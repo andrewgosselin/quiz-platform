@@ -31,10 +31,10 @@ class Question extends Model
     // }
 
     public function getChoicesAttribute($value) {
-        return json_decode(json_decode($value, true), true);
+        return json_decode($value, true);
     }
     public function getAnswersAttribute($value) {
-        return json_decode(json_decode($value, true), true);
+        return json_decode($value, true);
     }
 
     // ----------- Relationships
