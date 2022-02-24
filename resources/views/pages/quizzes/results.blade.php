@@ -23,7 +23,7 @@
     </head>
     <body class="c1">
         <h1 class="heading">Quiz Results</h1>
-        <h3 class="sub-heading">Session #{{$session->id}} - {{$quiz->name}}</h3>
+        <h3 class="sub-heading">Session {{$session->session_id}} - {{$quiz->name}}</h3>
         <hr>
         <div class="detailsSection">
             <div class="takenBy">
