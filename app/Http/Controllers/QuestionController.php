@@ -39,9 +39,10 @@ class QuestionController extends Controller
     {
         $data = request()->all();
         $data["quiz_id"] = $id;
-        $data["choices"] = json_decode($data["choices"], true);
+        $data["choices"] = is_array($data["choices"]) ? $data["choices"] : json_decode($data["choices"], true);
         $question = Question::create($data);
         if ($request->hasFile('image_file')) {
+            
             $request->validate([
                 'image_file' => 'mimes:jpeg,bmp,png'
             ]);
@@ -90,6 +91,14 @@ class QuestionController extends Controller
         $quiz = Quiz::findOrFail($id);
         $question = $quiz->unordered_questions()->findOrFail($question_id ?? -1);
         $data = request()->all();
+        if ($request->hasFile('image_file')) {
+            $request->validate([
+                'image_file' => 'mimes:jpeg,bmp,png'
+            ]);
+            $request->image_file->store('question/' . $question->id, 'public');
+            $data["image"] = $request->image_file->hashName();
+            unset($data["image_url"]);
+        }
         $question->update($data);
         return $question->toArray();
     }

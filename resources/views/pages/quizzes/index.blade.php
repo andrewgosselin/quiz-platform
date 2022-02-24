@@ -43,7 +43,7 @@
                                 <a type="button" class="btn btn-primary" href="/admin/quizzes/{{$quiz->id}}">Edit</a>
                                 <a type="button" class="btn btn-info" href="/admin/quizzes/{{$quiz->id}}/start?newSession" target="_blank">Take</a>
                                 {{-- <a type="button" class="btn btn-info">Share</a> --}}
-                                {{-- <a type="button" class="btn btn-danger" onclick="deleteQuiz('{{$quiz->id}}')">Delete</a> --}}
+                                <a type="button" class="btn btn-danger" onclick="deleteQuiz('{{$quiz->id}}')">Delete</a>
                             </td>
                         </tr>
                     @endforeach
