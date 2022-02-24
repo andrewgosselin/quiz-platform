@@ -382,7 +382,7 @@
                             @if($session->score["precentage"] < $quiz->passing_score)
                                 <h1 style="color: red;">Failed (Under {{$quiz->passing_score}}%)</h1>
                             @else
-                                <h3>Passed!</h3>
+                                <h1 style="color: green;">Passed! ({{$quiz->passing_score}}%)</h1>
                             @endif
                             <div style="text-align:center;">
                                 <a href="{{url('/quizzes/' . $quiz->id . '/start?newSession')}}" target="_blank">Click to retry for a better score.</a>
