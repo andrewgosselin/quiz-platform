@@ -21,6 +21,7 @@ class CreateQuestionsTable extends Migration
             $table->longText("message")->default("");
             $table->json("choices")->nullable();
             $table->boolean("select_multiple")->default(false);
+            $table->longText("explanation")->default("");
             $table->foreign('quiz_id')->references('id')->on('quizzes')
                 ->onDelete('cascade');
             $table->timestamps();

@@ -21,7 +21,7 @@
 
     <div class="pt-4">
         <div class="quizList pb-5">
-            <a type="button" class="btn btn-success mb-4" href="/quizzes/create">New Quiz</a>
+            <a type="button" class="btn btn-success mb-4" href="/admin/quizzes/create">New Quiz</a>
             <table class="table table-striped datatable">
                 <thead>
                     <tr>
@@ -40,8 +40,8 @@
                             <td>{{$quiz->sessions->where("status", "in progress")->count()}}</td>
                             <td>{{$quiz->sessions->where("status", "complete")->count()}}</td>
                             <td>
-                                <a type="button" class="btn btn-primary" href="/quizzes/{{$quiz->id}}">Edit</a>
-                                <a type="button" class="btn btn-info" href="/quizzes/{{$quiz->id}}/start?newSession" target="_blank">Take</a>
+                                <a type="button" class="btn btn-primary" href="/admin/quizzes/{{$quiz->id}}">Edit</a>
+                                <a type="button" class="btn btn-info" href="/admin/quizzes/{{$quiz->id}}/start?newSession" target="_blank">Take</a>
                                 {{-- <a type="button" class="btn btn-info">Share</a> --}}
                                 {{-- <a type="button" class="btn btn-danger" onclick="deleteQuiz('{{$quiz->id}}')">Delete</a> --}}
                             </td>

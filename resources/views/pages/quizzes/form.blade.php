@@ -229,7 +229,8 @@
             function submitQuiz() {
                 let data = {
                     name: $("#nameInput").val(),
-                    description: $("#descriptionInput").val()
+                    description: $("#descriptionInput").val(),
+                    passing_score: $("#passingScoreInput").val()
                 };
 
                 @if($isEditing == true)
@@ -246,9 +247,9 @@
                     data: data,
                     success:function(data){
                         @if($isEditing == true)
-                            window.location.href = "/quizzes"
+                            window.location.href = "/admin/quizzes"
                         @else
-                            window.location.href = "/quizzes/" + data.id;
+                            window.location.href = "/admin/quizzes/" + data.id;
                         @endif
                     }
                 });
@@ -260,6 +261,10 @@
         <div class="mb-3">
             <label for="nameInput" class="form-label">Name</label>
             <input type="email" class="form-control" id="nameInput" value="{{$quiz->name ?? ""}}">
+        </div>
+        <div class="mb-3">
+            <label for="passingScoreInput" class="form-label">Passing Score</label>
+            <input type="number" class="form-control" id="passingScoreInput" value="{{$quiz->passing_score ?? 90}}">
         </div>
         <div class="mb-3">
             <label for="descriptionInput" class="form-label">Description</label>

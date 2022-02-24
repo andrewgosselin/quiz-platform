@@ -18,20 +18,20 @@ use App\Http\Controllers\ImageUploadController;
 
 
 Route::middleware(['auth'])->group(function () {
-    Route::redirect('/', '/quizzes');
-    Route::get('/quizzes', "App\Http\Controllers\QuizController@index")->name('quizzes');
-    Route::get('/quizzes/create', "App\Http\Controllers\QuizController@create")->name('quizzes.create');
-    Route::get('/quizzes/{id}', "App\Http\Controllers\QuizController@edit")->name('quizzes.edit');
-    Route::post('/quizzes/{id}', "App\Http\Controllers\QuizController@update")->name('quiz.update');
-    Route::delete('/quizzes/{id?}', "App\Http\Controllers\QuizController@destroy")->name('quizzes.delete');
-    Route::post('/quizzes/{id}/complete', "App\Http\Controllers\QuizController@complete")->name('quizzes.complete');
-    Route::get('/quizzes/{id?}/start', "App\Http\Controllers\QuizController@start")->name('quizzes.start');
+    Route::get('/', 'App\Http\Controllers\HomeController@index');
+    Route::get('/admin/quizzes', "App\Http\Controllers\QuizController@index")->name('quizzes');
+    Route::get('/admin/quizzes/create', "App\Http\Controllers\QuizController@create")->name('quizzes.create');
+    Route::get('/admin/quizzes/{id}', "App\Http\Controllers\QuizController@edit")->name('quizzes.edit');
+    Route::post('/admin/quizzes/{id}', "App\Http\Controllers\QuizController@update")->name('quiz.update');
+    Route::delete('/admin/quizzes/{id?}', "App\Http\Controllers\QuizController@destroy")->name('quizzes.delete');
+    Route::post('/admin/quizzes/{id}/complete', "App\Http\Controllers\QuizController@complete")->name('quizzes.complete');
+    Route::get('/admin/quizzes/{id?}/start', "App\Http\Controllers\QuizController@start")->name('quizzes.start');
 
 
-    Route::post('/quizzes/{id}/question', "App\Http\Controllers\QuestionController@store")->name('question.create');
-    Route::get('/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@show")->name('question.get');
-    Route::post('/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@update")->name('question.update');
-    Route::delete('/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@destroy")->name('question.delete');
+    Route::post('/admin/quizzes/{id}/question', "App\Http\Controllers\QuestionController@store")->name('question.create');
+    Route::get('/admin/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@show")->name('question.get');
+    Route::post('/admin/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@update")->name('question.update');
+    Route::delete('/admin/quizzes/{id}/question/{question_id?}', "App\Http\Controllers\QuestionController@destroy")->name('question.delete');
     
 
     Route::post('/session/create', "App\Http\Controllers\SessionController@create")->name('session.create');

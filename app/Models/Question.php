@@ -13,7 +13,7 @@ class Question extends Model
     use HasFactory;
 
     protected $fillable = [
-        "quiz_id", "type", "image", "message", "choices", "select_multiple"
+        "quiz_id", "type", "image", "message", "choices", "select_multiple", "explanation"
     ];
 
     public static function boot() {
@@ -24,11 +24,6 @@ class Question extends Model
 	        File::deleteDirectory(public_path('storage/question/' . $item->id));
 	    });
 	}
-
-    // ----------- Mutators
-    // public function getAnswerAttribute() {
-    //     return $this->answers[0] ?? null;
-    // }
 
     public function getChoicesAttribute($value) {
         return json_decode($value, true);

@@ -18,6 +18,7 @@ class CreateQuizzesTable extends Migration
             $table->string("name");
             $table->string("description")->default("");
             $table->json("questions_order")->nullable();
+            $table->integer("passing_score")->default(90);
             $table->timestamps();
         });
     }
