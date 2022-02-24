@@ -76,11 +76,30 @@ class QuizController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $data = $request->all();
+        
         if($id == "new") {
-            $quiz = \App\Models\Quiz::create(request()->all());
+            $quiz = \App\Models\Quiz::create($data);
+            if ($request->hasFile('image_file')) {
+                $request->validate([
+                    'image_file' => 'mimes:jpeg,bmp,png'
+                ]);
+                $request->image_file->store('quiz/' . $quiz->id, 'public');
+                $data["image"] = $request->image_file->hashName();
+                unset($data["image_url"]);
+            }
+            $quiz->update($data);
         } else {
             $quiz = \App\Models\Quiz::findOrFail($id);
-            $quiz->update(request()->all());
+            if ($request->hasFile('image_file')) {
+                $request->validate([
+                    'image_file' => 'mimes:jpeg,bmp,png'
+                ]);
+                $request->image_file->store('quiz/' . $id, 'public');
+                $data["image"] = $request->image_file->hashName();
+                unset($data["image_url"]);
+            }
+            $quiz->update($data);
         }
         return $quiz->toArray();
     }
@@ -99,6 +118,9 @@ class QuizController extends Controller
 
     public function start($id) {
         $quiz = Quiz::findOrFail($id);
+        if($quiz->questions->count() == 0) {
+            abort(404, "This quiz has no questions.");
+        }
         if(session()->has("session_id")) {
             $session = Session::where("session_id", session()->get("session_id"))->first();
             if($session) {

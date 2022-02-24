@@ -95,7 +95,7 @@ class QuestionController extends Controller
             $request->validate([
                 'image_file' => 'mimes:jpeg,bmp,png'
             ]);
-            $request->image_file->store('question/' . $question->id, 'public');
+            $request->image_file->store('question/' . $question_id, 'public');
             $data["image"] = $request->image_file->hashName();
             unset($data["image_url"]);
         }

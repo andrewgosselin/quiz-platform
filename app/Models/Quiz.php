@@ -7,13 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Question;
 use App\Models\Session;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Mail;
 
 class Quiz extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        "name", "description", "questions_order"
+        "name", "description", "image", "questions_order", "passing_score"
     ];
 
     protected $casts = [
@@ -49,10 +51,24 @@ class Quiz extends Model
             "score" => [
                 "correct" => $amountCorrect,
                 "precentage" => $amountCorrect / $quiz->questions->count() * 100,
-                "total" => $amountCorrect . " / " . $quiz->questions->count()
+                "total" => $amountCorrect . " / " . $quiz->questions->count(),
+                "results" => $results
             ],
             "status" => "complete"
         ]);
+
+        // Send quiz complete email.
+        $pdf = PDF::loadView('pages.quizzes.results', [
+            "quiz" => $quiz,
+            "session" => $session
+        ]);
+        if (!file_exists(storage_path('results/' . $session->session_id))) {
+            mkdir(storage_path('results/' . $session->session_id), 0777, true);
+        }
+        $pdf->save(storage_path('results/' . $session->session_id . '/results.pdf'));
+
+        Mail::to($session->email)->send(new \App\Mail\TestResults($session, $quiz));
+
         return $session;
     }
 
@@ -65,6 +81,13 @@ class Quiz extends Model
             return collect($list->values());
         }
         return $this->unordered_questions;
+    }
+
+    public function getQuestionsOrderAttribute($value) {
+        // Run this twice in case of it being double encoded because of Laravel bug.
+        $value = is_array($value) ? $value : json_decode($value, true);
+        $value = is_array($value) ? $value : json_decode($value, true);
+        return $value;
     }
 
     // ----------- Relationships

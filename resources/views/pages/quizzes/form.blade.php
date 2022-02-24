@@ -51,6 +51,24 @@
             top: 5px;
             left: 5px;
         }
+
+        .quizImageContainer {
+            width: 100%;
+            height: 160px;
+            border: 1px solid gray;
+            background-color: lightgrey;
+            position: relative;
+            text-align: center;
+        }
+        .quizImageContainer img {
+            width: auto;
+            height: 100%;
+        }
+        .quizImageContainer button {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+        }
     </style>
     
     <x-slot name="header">
@@ -72,6 +90,9 @@
                 $('#questionImageUploadButton').click(function(){ 
                     $('#questionImageUploadInput').trigger('click'); 
                 });
+                $('#quizImageUploadButton').click(function(){ 
+                    $('#quizImageUploadInput').trigger('click'); 
+                });
                 $("#questionTypeInput").on("change", function() {
                     if($(this).val() == "multiple_choice") {
                         $('#trueFalseSection').css("display", "none");
@@ -83,8 +104,8 @@
                 });
             });
 
-            function loadFile(event) {
-                var output = $(".questionImageContainer img")[0];
+            function loadFile(event, image_selector) {
+                var output = $(image_selector)[0];
                 output.src = URL.createObjectURL(event.target.files[0]);
                 output.onload = function() {
                     URL.revokeObjectURL(output.src) // free memory
@@ -110,6 +131,7 @@
             function getQuestionData() {
                 var data = new FormData();
                 data.append('message', $("#questionMessageInput").val());
+                data.append('explanation', $("#questionExplanationInput").val());
                 data.append('type', $("#questionTypeInput").val());
                 data.append('image_file', $('#questionImageUploadInput')[0].files[0]); 
                 
@@ -143,6 +165,7 @@
             }
 
             function addQuestion() {
+                $("#createQuestionSubmitButton")[0].disabled = true;
                 $.ajax({
                     type:'POST',
                     url:"{{ route('question.create', $quiz->id ?? '-1') }}",
@@ -161,6 +184,14 @@
                             </tr>
                         `);
                         $("#questionModal").modal("hide");
+                        toastr.success('Question added.');
+                        $("#createQuestionSubmitButton")[0].disabled = false;
+                    },
+                    error: function(e) {
+                        $("#createQuestionSubmitButton")[0].disabled = false;
+                        $("#questionModal").modal("hide");
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
                     }
                 });
             }
@@ -171,6 +202,11 @@
                     url:"{{ route('question.delete', ['id' => $quiz->id ?? '-1']) }}/" + id,
                     success:function(data){
                         $(`tr[questionId=${id}]`).remove();
+                        toastr.success('Question deleted.');
+                    },
+                    error: function(e) {
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
                     }
                 });
             }
@@ -178,6 +214,7 @@
 
             function saveQuestion() {
                 let id = $("#editedQuestionId").val();
+                $("#saveQuestionSubmitButton")[0].disabled = true;
                 $.ajax({
                     type:'POST',
                     url: "{{ route('question.update', ['id' => $quiz->id ?? '-1']) }}/" + id,
@@ -186,6 +223,14 @@
                     processData: false,
                     success:function(data){
                         $("#questionModal").modal("hide");
+                        toastr.success('Question saved.');
+                        $("#saveQuestionSubmitButton")[0].disabled = false;
+                    },
+                    error:function(e) {
+                        $("#questionModal").modal("hide");
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
+                        $("#saveQuestionSubmitButton")[0].disabled = false;
                     }
                 });
             }
@@ -197,7 +242,12 @@
                     success:function(data){;
                         $("#editedQuestionId").val(id);
                         console.log(data);
-                        openQuestionModal("edit", "/storage/question/" + data.id + "/" + data.image, data.message, data.type, data.choices, data.select_multiple);
+                        openQuestionModal("edit", "/storage/question/" + data.id + "/" + data.image, data.message, data.explanation, data.type, data.choices, data.select_multiple);
+                    },
+                    error:function(e) {
+                        $("#questionModal").modal("hide");
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
                     }
                 });
             }
@@ -206,7 +256,7 @@
                 openQuestionModal("new");
             }
 
-            function openQuestionModal(operation, image = "", message = "", type = "multiple_choice", extra1 = [], extra2 = false) {
+            function openQuestionModal(operation, image = "", message = "", explanation = "", type = "multiple_choice", extra1 = [], extra2 = false) {
                 $('#questionModal').find('input[type=text]').val('');
                 $('#questionModal').find('input[type=checkbox]').attr('checked', false);
                 $('#questionModal').find('input[type=file]').val('');
@@ -218,6 +268,7 @@
 
                 $('.questionImageContainer img')[0].src = image;
                 $("#questionMessageInput").val(message);
+                $("#questionExplanationInput").val(explanation);
                 $("#questionTypeInput").val(type).change();
                 if(type == "multiple_choice") {
                     $("#choicesTable tbody").html("");
@@ -234,29 +285,35 @@
             }
 
             function submitQuiz() {
-                let data = {
-                    name: $("#nameInput").val(),
-                    description: $("#descriptionInput").val()
-                };
-
+                var data = new FormData();
+                data.append('name', $("#nameInput").val());
+                data.append('description', $("#descriptionInput").val());
+                data.append('passing_score', $("#passingScoreInput").val());
+                data.append('image_file', $('#quizImageUploadInput')[0].files[0]); 
+                let questions_order = [];
                 @if($isEditing == true)
-                    data.questions_order = [];
                     $("#questionsTable tr").each(function(index) {
                         let questionId = $(this).attr("questionId");
-                        data.questions_order.push(questionId);
+                        questions_order.push(questionId);
                     });
                 @endif
-
+                data.append('questions_order', JSON.stringify(questions_order)); 
                 $.ajax({
                     type:'POST',
                     url:"{{ route('quiz.update', ['id' => $quiz->id ?? 'new']) }}",
                     data: data,
+                    contentType: false,
+                    processData: false,
                     success:function(data){
                         @if($isEditing == true)
-                            window.location.href = "/quizzes"
+                            window.location.href = "/admin/quizzes"
                         @else
-                            window.location.href = "/quizzes/" + data.id;
+                            window.location.href = "/admin/quizzes/" + data.id;
                         @endif
+                    },
+                    error:function(e) {
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
                     }
                 });
             }
@@ -265,8 +322,19 @@
 
     <div class="pt-4">
         <div class="mb-3">
+            <div class="quizImageContainer">
+                <img @if($isEditing == true) src="/storage/quiz/{{$quiz->id}}/{{$quiz->image ?? ''}}" @endif>
+                <button type="button" class="btn btn-primary" id="quizImageUploadButton">Upload...</button>
+            </div>
+            <input type="file" id="quizImageUploadInput" onchange="loadFile(event, '.quizImageContainer img')" style="display:none"/> 
+        </div>
+        <div class="mb-3">
             <label for="nameInput" class="form-label">Name</label>
             <input type="email" class="form-control" id="nameInput" value="{{$quiz->name ?? ""}}">
+        </div>
+        <div class="mb-3">
+            <label for="passingScoreInput" class="form-label">Passing Score</label>
+            <input type="number" class="form-control" id="passingScoreInput" value="{{$quiz->passing_score ?? 90}}">
         </div>
         <div class="mb-3">
             <label for="descriptionInput" class="form-label">Description</label>
@@ -323,11 +391,15 @@
                         <img>
                         <button type="button" class="btn btn-primary" id="questionImageUploadButton">Upload...</button>
                     </div>
-                    <input type="file" id="questionImageUploadInput" onchange="loadFile(event)" style="display:none"/> 
+                    <input type="file" id="questionImageUploadInput" onchange="loadFile(event, '.questionImageContainer img')" style="display:none"/> 
                 </div>
                 <div class="mb-3">
                     <label for="questionMessageInput" class="col-form-label">Question</label>
                     <input type="text" class="form-control" id="questionMessageInput">
+                </div>
+                <div class="mb-3">
+                    <label for="questionExplanationInput" class="col-form-label">Explanation</label>
+                    <textarea class="form-control" id="questionExplanationInput" rows="3"></textarea>
                 </div>
                 <div class="mb-3">
                     <label for="questionTypeInput" class="col-form-label">Type</label>
@@ -375,8 +447,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success newQuestionForm" onclick="addQuestion()">Create</button>
-                <button type="button" class="btn btn-success editQuestionForm" onclick="saveQuestion()">Save</button>
+                <button type="button" class="btn btn-success newQuestionForm" onclick="addQuestion()" id="createQuestionSubmitButton">Create</button>
+                <button type="button" class="btn btn-success editQuestionForm" onclick="saveQuestion()" id="saveQuestionSubmitButton">Save</button>
             </div>
             </div>
         </div>
