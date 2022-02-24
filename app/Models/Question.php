@@ -33,6 +33,9 @@ class Question extends Model
     public function getChoicesAttribute($value) {
         return json_decode($value, true);
     }
+    public function setChoicesAttribute($value) {
+        return json_encode($value);
+    }
     public function getAnswersAttribute($value) {
         return json_decode($value, true);
     }
