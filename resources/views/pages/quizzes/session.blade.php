@@ -197,8 +197,14 @@
                     // If the count down is finished, write some text
                     if (distance < 0) {
                         clearInterval(x);
-                        document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
-                        window.location.href = "/";
+                        $.ajax({
+                            type:'DELETE',
+                            url: "{{ route('session.destroy') }}",
+                            success:function(data){
+                                document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
+                                window.location.href = "/";
+                            }
+                        });
                     }
                     
                 }, 1000);

@@ -66,9 +66,9 @@ class Quiz extends Model
             mkdir(storage_path('app/public/results/' . $session->session_id), 0777, true);
         }
         $pdf->save(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
-
         Mail::to($session->email)->send(new \App\Mail\TestResults($session, $quiz));
-
+        unlink(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
+        unlink(storage_path('app/public/results/' . $session->session_id));
         return $session;
     }
 
