@@ -49,6 +49,7 @@ class QuestionController extends Controller
             $data["image"] = $request->image_file->hashName();
             unset($data["image_url"]);
         }
+        
         $question->update($data);
         return $question->toArray();
     }
