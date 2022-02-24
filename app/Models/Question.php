@@ -39,6 +39,9 @@ class Question extends Model
     public function getAnswersAttribute($value) {
         return json_decode($value, true);
     }
+    public function setAnswersAttribute($value) {
+        return json_decode($value, true);
+    }
 
     // ----------- Relationships
     public function quiz() {
