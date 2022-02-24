@@ -3,26 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Results</title>
-    <style type="text/css">
-        .takenBy {
-            float: left;
-            height: 200px;
-            width: 50%;
-        }
-        .details {
-            float: right;
-            height: 200px;
-            width: 50%;
-        }
-        .detailsSection {
-            height: 400px;
-            width: 100%;
-        }
-        body {
-            padding: 100px;
-        }
-    </style>
+    <title>Simple Transactional Email</title>
     <style>
       /* -------------------------------------
           GLOBAL RESETS
@@ -73,9 +54,9 @@
         display: block;
         margin: 0 auto !important;
         /* makes it centered */
-        max-width: 800px;
+        max-width: 580px;
         padding: 10px;
-        width: 800px; 
+        width: 580px; 
       }
 
       /* This should also be a block element, so that it will fill 100% of the .container */
@@ -83,7 +64,7 @@
         box-sizing: border-box;
         display: block;
         margin: 0 auto;
-        max-width: 800px;
+        max-width: 580px;
         padding: 10px; 
       }
 
@@ -349,13 +330,6 @@
         } 
       }
 
-        ol { 
-            font-weight: bold;
-            list-style-position: inside;
-            margin-left: -44px;
-        }
-        .normal { font-weight: normal; }
-
     </style>
   </head>
   <body>
@@ -364,7 +338,7 @@
       <tr>
         <td>&nbsp;</td>
         <td class="container">
-          <li class="content">
+          <div class="content">
 
             <!-- START CENTERED WHITE CONTAINER -->
             <table role="presentation" class="main">
@@ -375,69 +349,26 @@
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                       <td>
-                        <h1 class="heading">Quiz Results</h1>
-                        <h3 class="sub-heading">Session {{$session->session_id}} - {{$quiz->name}}</h3>
-                        <hr>
-                        <div class="detailsSection">
-                            @if($session->score["precentage"] < $quiz->passing_score)
-                                <h1 style="color: red;">Failed (Under {{$quiz->passing_score}}%)</h1>
-                            @else
-                                <h3>Passed!</h3>
-                            @endif
-                            <div style="text-align:center;">
-                                <a href="{{url('/quizzes/' . $quiz->id . '/start?newSession')}}" target="_blank">Click to retry for a better score.</a>
-                            </div>
-                            <br>
-                            <div class="takenBy">
-                                <h5>QUIZ ID:</h5> {{$session->quiz_id}}
-                                <h5>TAKEN BY:</h5> {{$session->first_name}} {{$session->last_name}} <br><br>
-                                {{$session->email}} <br><br>
-                                {{$session->phone_number}} <br><br>
-                                {{$session->address_1}} <br> {{$session->city}}
-                                {{$session->state}} {{$session->zip}}
-                            </div>
-                            <div class="details">
-                                <!-- <h5>SUBMISSION DATE:</h5> {{$session->id}} -->
-                                <h5>SESSION ID:</h5> {{$session->session_id}}
-                                <h5>SCORE PRECENTAGE:</h5> {{$session->score["precentage"]}}%
-                                <h5>SCORE TOTAL:</h5> {{$session->score["total"]}}
-                            </div>
-                        </div>
-                        <hr>
-                        <h2>Questions</h2>
-                        <ol>
-                            @foreach($quiz->questions as $index => $question)
-                                <li>
-                                    <label>Question</label><br>
-                                    
-                                    <div style="padding-left: 30px;">
-                                        <span class="normal">{{$question->message}}</span>
-                                    </div>
-                                    <label style="margin-left: 15px;">Answer</label><br>
-                                    <div style="padding-left: 30px;">
-                                        @foreach($session->answers[$index] as $choiceIndex => $answer)
-                                            @if($answer["selected"] == "true")
-                                                <span class="normal">{{$question->choices[$choiceIndex]["choice"]}}</span><br>
-                                            @endif
-                                        @endforeach
-                                        
-                                    </div>
-                                    <label style="margin-left: 15px;">Explanation</label><br>
-                                    <div style="padding-left: 30px;">
-                                        @if($session->score["results"][$index] == true)
-                                            <span class="normal">This answer is correct.</span><br>
-                                        @else
-                                            <span class="normal">This answer is incorrect.</span>
-                                        @endif
-                                        <span class="normal">{{$question->explanation}}</span>
-                                    </div>
-                                </li>
-                                <br>
-                            @endforeach
-                        </ol>
-                        <hr>
-                        <br>
-                        <h5 style="color: red;">WARNING:</h5> This is a very early test document, the final quiz results page will be extremely different.
+                        <p>Hello {{ucfirst($session->first_name)}},</p>
+                        <p>Thanks for taking the quiz!</p>
+                        <p>Attached is a PDF of the results from your last quiz session taking the {{$quiz->name}} quiz.</p>
+                        <p>Below you can click the button to try the quiz again to get a better score!</p>
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" class="btn btn-primary">
+                          <tbody>
+                            <tr>
+                              <td align="left">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                                  <tbody>
+                                    <tr>
+                                      <td> <a href="{{url('/quizzes/' . $quiz->id . '/start')}}" target="_blank">Take again</a> </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <p>Thanks again for taking the quiz!</p>
                       </td>
                     </tr>
                   </table>
@@ -448,6 +379,17 @@
             </table>
             <!-- END CENTERED WHITE CONTAINER -->
 
+            <!-- START FOOTER -->
+            <div class="footer">
+              <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td class="content-block">
+                    <span class="apple-link">This email is auto generated.</span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+            <!-- END FOOTER -->
 
           </div>
         </td>

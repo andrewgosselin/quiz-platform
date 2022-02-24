@@ -13,6 +13,11 @@
                     url:"{{ route('quizzes.delete') }}/" + id,
                     success:function(data){
                         $("#quiz-" + id).remove();
+                        toastr.error('Quiz has been deleted.');
+                    },
+                    error:function(e) {
+                        toastr.error('Please refresh and try again.', "Something went wrong");
+                        console.error(e);
                     }
                 });
             }
