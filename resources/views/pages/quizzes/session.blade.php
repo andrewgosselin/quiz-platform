@@ -115,7 +115,7 @@
                         goToQuestion(parseInt(current) + 1);
                     }
                 } else {
-                    
+                    toastr.error("You must fill in an answer.");
                 }
             }
             function previousQuestion() {
@@ -279,8 +279,6 @@
             -webkit-transform: translate(-50%, -50%); /* for Safari */
             background-color: white;
             position: absolute;
-            margin-top: 50px;
-            margin-bottom: 50px;
         }
         #questionPages {
             height: 100%;
@@ -399,7 +397,7 @@
                     <div class="alert alert-danger" role="alert" id="endPageError" style="display: none;"></div>
                     
                     <div class="alert alert-warning" role="alert">
-                    <p id="demo"></p>
+                    <p id="demo">Loading...</p>
                     Quiz Results Saved For A Limited Time. See If You pass or fail on the next screen.
                     </div>
                     <h5 class="card-title">Details</h5>
@@ -542,4 +540,5 @@
             </div>
         </div>
     </div>
+    <br>
 </x-blank-layout>

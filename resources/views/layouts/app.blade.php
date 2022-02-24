@@ -55,7 +55,7 @@
                             <i class='bx bx-user nav_icon'></i> 
                             <span class="nav_name">Results</span> 
                         </a>
-                        <a href="/" class="nav_link {{\Request::routeIs('session.results.index') ? "active" : ""}}"> 
+                        <a href="/" class="nav_link"> 
                             <i class='bx bx-user nav_icon'></i> 
                             <span class="nav_name">Public Page</span> 
                         </a>

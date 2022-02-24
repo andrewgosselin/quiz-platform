@@ -165,7 +165,7 @@
             }
 
             function addQuestion() {
-                $("#createQuestionSubmitButton")[0].disabled = true;
+                $("#createQuestionSubmitButton").attr("disabled", true);
                 $.ajax({
                     type:'POST',
                     url:"{{ route('question.create', $quiz->id ?? '-1') }}",
@@ -185,10 +185,10 @@
                         `);
                         $("#questionModal").modal("hide");
                         toastr.success('Question added.');
-                        $("#createQuestionSubmitButton")[0].disabled = false;
+                        $("#createQuestionSubmitButton").attr("disabled", false);
                     },
                     error: function(e) {
-                        $("#createQuestionSubmitButton")[0].disabled = false;
+                        $("#createQuestionSubmitButton").attr("disabled", false);
                         $("#questionModal").modal("hide");
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
@@ -214,7 +214,7 @@
 
             function saveQuestion() {
                 let id = $("#editedQuestionId").val();
-                $("#saveQuestionSubmitButton")[0].disabled = true;
+                $("#saveQuestionSubmitButton").attr("disabled", true);
                 $.ajax({
                     type:'POST',
                     url: "{{ route('question.update', ['id' => $quiz->id ?? '-1']) }}/" + id,
@@ -224,13 +224,13 @@
                     success:function(data){
                         $("#questionModal").modal("hide");
                         toastr.success('Question saved.');
-                        $("#saveQuestionSubmitButton")[0].disabled = false;
+                        $("#saveQuestionSubmitButton").attr("disabled", false);
                     },
                     error:function(e) {
                         $("#questionModal").modal("hide");
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
-                        $("#saveQuestionSubmitButton")[0].disabled = false;
+                        $("#saveQuestionSubmitButton").attr("disabled", false);
                     }
                 });
             }
@@ -285,13 +285,27 @@
             }
 
             function submitQuiz() {
-                $("#submitQuizButton")[0].disabled = true;
+                $("#submitQuizButton").attr("disabled", true);
                 toastr.info("Saving quiz...");
                 var data = new FormData();
                 data.append('name', $("#nameInput").val());
                 data.append('description', $("#descriptionInput").val());
                 data.append('passing_score', $("#passingScoreInput").val());
                 data.append('image_file', $('#quizImageUploadInput')[0].files[0]); 
+
+
+                if($("#nameInput").val() == "") {
+                    toastr.error("You must fill in the name.");
+                    $("#submitQuizButton").attr("disabled", false);
+                    return;
+                }
+
+                if($("#descriptionInput").val() == "") {
+                    toastr.error("You must fill in the description.");
+                    $("#submitQuizButton").attr("disabled", false);
+                    return;
+                }
+
                 let questions_order = [];
                 @if($isEditing == true)
                     $("#questionsTable tr").each(function(index) {
@@ -312,10 +326,12 @@
                         @else
                             window.location.href = "/admin/quizzes/" + data.id;
                         @endif
+                        $("#submitQuizButton").attr("disabled", false);
                     },
                     error:function(e) {
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
+                        $("#submitQuizButton").attr("disabled", false);
                     }
                 });
             }
