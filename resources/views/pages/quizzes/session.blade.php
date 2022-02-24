@@ -86,12 +86,28 @@
                 });
             }
 
+            function checkQuestionAnswered() {
+                let answered = false;
+                $(".questionPage.active").find("input").each(function() {
+                    if(answered == false) {
+                        console.log(this.checked);
+                        answered = this.checked == true;
+                    }
+                });
+                return answered;
+            }
+
             function nextQuestion() {
-                let current = $(".questionPage.active").attr("questionIndex");
-                if(parseInt(current) == ($(`.questionPage`).length - 1)) {
-                    goToEndScreen();
+                let questionAnswered = checkQuestionAnswered();
+                if(questionAnswered) {
+                    let current = $(".questionPage.active").attr("questionIndex");
+                    if(parseInt(current) == ($(`.questionPage`).length - 1)) {
+                        goToEndScreen();
+                    } else {
+                        goToQuestion(parseInt(current) + 1);
+                    }
                 } else {
-                    goToQuestion(parseInt(current) + 1);
+                    
                 }
             }
             function previousQuestion() {
@@ -293,7 +309,7 @@
                                                 @else
                                                     @foreach($question->choices as $choiceIndex => $choice)
                                                         <div class="form-check">
-                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
+                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
                                                             <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
                                                                 {{$choice["choice"]}}
                                                             </label>
@@ -304,7 +320,7 @@
                                             @case("true_false")
                                                 @foreach($question->choices as $choiceIndex => $choice)
                                                     <div class="form-check">
-                                                        <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}" @if($choiceIndex == 0) checked @endif>
+                                                        <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
                                                         <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
                                                             {{$choice["choice"]}}
                                                         </label>

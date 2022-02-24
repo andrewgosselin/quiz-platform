@@ -98,7 +98,7 @@
                             <input type="text" class="form-control choiceInput" value="${choice}">
                         </td>
                         <td>
-                            <input class="form-check-input choiceCorrectInput" type="checkbox" ${choice_correct == "true" ? "checked" : ""}>
+                            <input class="form-check-input choiceCorrectInput" type="checkbox" ${(choice_correct == "true" || choice_correct == true) ? "checked" : ""}>
                         </td>
                         <td>
                             <a type="button" class="btn btn-danger" onclick="$(this).parent().parent().remove()">Delete</a>
@@ -138,6 +138,7 @@
                     data.append('choices', JSON.stringify(choices));
                     data.append('select_multiple', 0);
                 }
+                console.log(data);
                 return data;
             }
 
@@ -206,6 +207,11 @@
             }
 
             function openQuestionModal(operation, image = "", message = "", type = "multiple_choice", extra1 = [], extra2 = false) {
+                $('#questionModal').find('input[type=text]').val('');
+                $('#questionModal').find('input[type=checkbox]').attr('checked', false);
+                $('#questionModal').find('input[type=file]').val('');
+                $('#questionModal').find('.questionImageContainer img').attr('src', '');
+                
                 $('.editQuestionForm').css('display', 'none');
                 $('.newQuestionForm').css('display', 'none');
                 $('.' + operation + 'QuestionForm').css('display', 'initial');
@@ -215,6 +221,7 @@
                 $("#questionTypeInput").val(type).change();
                 if(type == "multiple_choice") {
                     $("#choicesTable tbody").html("");
+                    console.log(extra1);
                     for(let i = 0; i < extra1.length; i++) {
                         addChoice(extra1[i].choice, extra1[i].correct);
                     }

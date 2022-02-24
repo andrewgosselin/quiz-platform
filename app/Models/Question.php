@@ -16,6 +16,10 @@ class Question extends Model
         "quiz_id", "type", "image", "message", "choices", "select_multiple"
     ];
 
+    protected $casts = [
+        "choices" => "array"
+    ];
+
     public static function boot() {
 
 	    parent::boot();
@@ -26,22 +30,19 @@ class Question extends Model
 	}
 
     // ----------- Mutators
+    public function getChoicesAttribute($value) {
+        // Run this twice in case of it being double encoded because of Laravel bug.
+        $value = is_array($value) ? $value : json_decode($value, true);
+        $value = is_array($value) ? $value : json_decode($value, true);
+        return $value;
+    }
     // public function getAnswerAttribute() {
     //     return $this->answers[0] ?? null;
     // }
 
-    public function getChoicesAttribute($value) {
-        return json_decode($value, true);
-    }
-    public function setChoicesAttribute($value) {
-        return json_encode($value);
-    }
-    public function getAnswersAttribute($value) {
-        return json_decode($value, true);
-    }
-    public function setAnswersAttribute($value) {
-        return json_decode($value, true);
-    }
+    // public function getAnswersAttribute($value) {
+    //     return json_decode($value, true);
+    // }
 
     // ----------- Relationships
     public function quiz() {
