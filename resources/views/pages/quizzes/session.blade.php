@@ -4,6 +4,11 @@
             var session = @json($session ?? null);
             var endScreen = false;
             $( document ).ready(function() {
+                const queryString = window.location.search;
+                const urlParams = new URLSearchParams(queryString);
+                if(urlParams.has('newSession')) {
+                    localStorage.setItem("expire_date", null);
+                }
                 history.pushState(null, "", location.href.split("?")[0]);
                 if(session !== null) {
                     setAnswers();
@@ -53,10 +58,13 @@
                 let required = ["first_name", "last_name", "email", "phone_number"];
                 for(let i = 0; i < required.length; i++) {
                     if(data[required[i]] == "" || data[required[i]] == undefined) {
-                        $("#endPageError").html("Not all required fields are filled!");
-                        $("#endPageError").css("display", "block");
+                        toastr.error("Not all required fields are filled!");
                         return;
                     }
+                }
+                if(!$("#termsCheckbox")[0].checked) {
+                    toastr.error("You must accept the terms and conditions.");
+                    return;
                 }
                 $.ajax({
                     type:'POST',
@@ -137,6 +145,10 @@
                     if(question == 0) {
                         $("#previousQuestionButton").css("display", "none");
                         $("#nextQuestionButton").css("display", "initial");
+                    } else if(question == ($(`.questionPage`).length - 1)) {
+                        $("#previousQuestionButton").css("display", "initial");
+                        $("#nextQuestionButton").css("display", "none");
+                        $("#submitAnswersButton").css("display", "initial");
                     } else if(question > 0) {
                         $("#previousQuestionButton").css("display", "initial");
                         $("#nextQuestionButton").css("display", "initial");
@@ -150,12 +162,53 @@
 
             function goToEndScreen() {
                 window.endScreen = true;
-                $("#previousQuestionButton").css("display", "initial");
+                
+                // Get today's date and time
+                console.log(localStorage.getItem("expire_date"));
+                if(localStorage.getItem("expire_date") !== null && localStorage.getItem("expire_date") !== "null") {
+                    var date = new Date(localStorage.getItem("expire_date") * 1000) + 5 * 60000;
+                } else {
+                    var date = new Date().getTime() + 5 * 60000;
+                    localStorage.setItem("expire_date", Math.round(date / 1000));
+                }
+
+                var countDownDate = new Date(date).getTime();
+
+                console.log(countDownDate - new Date().getTime());
+
+                // Update the count down every 1 second
+                var x = setInterval(function() {
+                    
+                    // Get today's date and time
+                    var now = new Date().getTime();
+
+                    // Find the distance between now and the count down date
+                    var distance = countDownDate - now;
+                    // Time calculations for days, hours, minutes and seconds
+                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                    localStorage.setItem("timer_distance", distance);
+
+                    // Display the result in the element with id="demo"
+                    document.getElementById("demo").innerHTML = "<b>" + minutes + "m " + seconds + "s " + "</b>";
+                    
+                    // If the count down is finished, write some text
+                    if (distance < 0) {
+                        clearInterval(x);
+                        document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
+                        window.location.href = "/";
+                    }
+                    
+                }, 1000);
+                $("#previousQuestionButton").css("display", "none");
                 $("#nextQuestionButton").css("display", "none");
                 $("#questionPages").css("display", "none");
                 $(".questionPage").removeClass("active");
                 $("#endPage").css("display", "block");
                 $("#submitQuizButton").css("display", "initial");
+                $("#submitAnswersButton").css("display", "none");
                 updateSession();
             }
 
@@ -210,7 +263,7 @@
         }
 
         .stepsContainer {
-            height: 800px;
+            height: 825px;
             width: 900px;
             position: absolute;
             left: 50%;
@@ -220,6 +273,8 @@
             -webkit-transform: translate(-50%, -50%); /* for Safari */
             background-color: white;
             position: absolute;
+            margin-top: 50px;
+            margin-bottom: 50px;
         }
         #questionPages {
             height: 100%;
@@ -336,6 +391,11 @@
                 </div>
                 <div id="endPage" style="display: none;">
                     <div class="alert alert-danger" role="alert" id="endPageError" style="display: none;"></div>
+                    
+                    <div class="alert alert-warning" role="alert">
+                    <p id="demo"></p>
+                    Quiz Results Saved For A Limited Time. See If You pass or fail on the next screen.
+                    </div>
                     <h5 class="card-title">Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -437,6 +497,15 @@
                             <label for="zipInput">Zip</label>
                             <input type="text" class="form-control" id="zipInput">
                         </div>
+
+                        <div class="form-group mt-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="" id="termsCheckbox" required>
+                                <label class="form-check-label" for="termsCheckbox">
+                                    Agree to <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -445,6 +514,25 @@
                 <button type="button" class="btn btn-primary float-end" onclick="nextQuestion()" style="display: none;" id="nextQuestionButton">Next Question</button>
                 <button type="button" class="btn btn-primary float-end" onclick="startQuiz()" id="startQuizButton">Start Quiz</button>
                 <button type="button" class="btn btn-success float-end" onclick="submitQuiz()" style="display: none;" id="submitQuizButton">Submit Quiz</button>
+                <button type="button" class="btn btn-success float-end" onclick="goToEndScreen()" style="display: none;" id="submitAnswersButton">Submit Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Providing your number and clicking “yes,” is your electronic signature authorizing Senior Healthcare Advisors and its affiliates, agents, representatives, and service providers (collectively, “Senior Healthcare Advisors”) to send you marketing telephone calls, pre-recorded calls, text messages and emails at the number and email address you provided using an ATDS or automated system for the selection or dialing of telephone numbers. Your consent is not required as a condition of purchase. You also are confirming that you are the subscriber to, or the customary user of, the telephone number and e-mail address you provided. You may unsubscribe at any time.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>

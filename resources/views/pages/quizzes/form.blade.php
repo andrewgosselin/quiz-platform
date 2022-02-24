@@ -285,6 +285,8 @@
             }
 
             function submitQuiz() {
+                $("#submitQuizButton")[0].disabled = true;
+                toastr.info("Saving quiz...");
                 var data = new FormData();
                 data.append('name', $("#nameInput").val());
                 data.append('description', $("#descriptionInput").val());
@@ -373,7 +375,7 @@
                 </div>
             </div>
         @endif
-        <button type="submit" class="btn btn-primary mb-4" onclick="submitQuiz()">Submit</button>
+        <button type="submit" class="btn btn-primary mb-4" onclick="submitQuiz()" id="submitQuizButton">Submit</button>
     </div>
 
     <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
