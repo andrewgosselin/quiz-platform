@@ -134,17 +134,6 @@
                                                             btn-sm
                                                             btn-outline-secondary
                                                         "
-                                                        href="/quizzes/{{$quiz->id}}"
-                                                    >
-                                                        View
-                                                    </a>
-                                                    <a
-                                                        type="button"
-                                                        class="
-                                                            btn
-                                                            btn-sm
-                                                            btn-outline-secondary
-                                                        "
                                                         href="/quizzes/{{$quiz->id}}/start"
                                                     >
                                                         Take

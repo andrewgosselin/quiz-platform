@@ -427,7 +427,7 @@
                                         @if($session->score["results"][$index] == true)
                                             <span class="normal">This answer is correct.</span><br>
                                         @else
-                                            <span class="normal">This answer is incorrect.</span>
+                                            <span class="normal">This answer is incorrect.</span><br>
                                         @endif
                                         <span class="normal">{{$question->explanation}}</span>
                                     </div>

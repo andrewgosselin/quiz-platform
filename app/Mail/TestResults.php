@@ -36,7 +36,7 @@ class TestResults extends Mailable
         return $this->view('pages.quizzes.results')
             ->with("session", $this->session)
             ->with("quiz", $this->quiz)
-            ->attach(storage_path('results/' . $this->session->session_id . '/results.pdf'), [
+            ->attach(storage_path('app/public/results/' . $this->session->session_id . '/results.pdf'), [
                 'as' => 'results.pdf',
                 'mime' => 'application/pdf',
            ]);

@@ -23,6 +23,7 @@ Route::get('/admin/quizzes/create', "App\Http\Controllers\QuizController@create"
 
 Route::post('/session/create', "App\Http\Controllers\SessionController@create")->name('session.create');
 Route::post('/session/update', "App\Http\Controllers\SessionController@update")->name('session.update');
+Route::delete('/session/destroy', "App\Http\Controllers\SessionController@destroy")->name('session.destroy');
 Route::get('/quizzes/{id?}/start', "App\Http\Controllers\QuizController@start")->name('quizzes.start');
 Route::post('/admin/quizzes/{id}/complete', "App\Http\Controllers\QuizController@complete")->name('quizzes.complete');
 

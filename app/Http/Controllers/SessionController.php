@@ -96,9 +96,11 @@ class SessionController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy()
     {
-        //
+        if(session()->has("session_id")) {
+            Session::where("session_id", session()->get("session_id"))->first()->delete();
+        }
     }
     
     public function resultsIndex() {
