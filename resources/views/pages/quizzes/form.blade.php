@@ -298,7 +298,7 @@
                 </div>
             </div>
         @endif
-        <button type="submit" class="btn btn-primary" onclick="submitQuiz()">Submit</button>
+        <button type="submit" class="btn btn-primary mb-4" onclick="submitQuiz()">Submit</button>
     </div>
 
     <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">

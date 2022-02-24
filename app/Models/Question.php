@@ -16,11 +16,6 @@ class Question extends Model
         "quiz_id", "type", "image", "message", "choices", "select_multiple"
     ];
 
-    protected $casts = [
-        "choices" => "array",
-        "answers" => "array"
-    ];
-
     public static function boot() {
 
 	    parent::boot();
@@ -34,6 +29,13 @@ class Question extends Model
     // public function getAnswerAttribute() {
     //     return $this->answers[0] ?? null;
     // }
+
+    public function getChoicesAttribute($value) {
+        return json_decode(json_decode($value, true), true);
+    }
+    public function getAnswersAttribute($value) {
+        return json_decode(json_decode($value, true), true);
+    }
 
     // ----------- Relationships
     public function quiz() {
