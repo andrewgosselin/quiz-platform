@@ -27,8 +27,10 @@ class QuizController extends Controller
      */
     public function create()
     {
+        $categories = Quiz::getCategories();
         return view('pages.quizzes.form')
-            ->with("isEditing", false);
+            ->with("isEditing", false)
+            ->with("categories", $categories);
     }
 
     /**
@@ -62,9 +64,11 @@ class QuizController extends Controller
     public function edit($id)
     {
         $quiz = Quiz::findOrFail($id);
+        $categories = Quiz::getCategories();
         return view('pages.quizzes.form')
             ->with("isEditing", true)
-            ->with("quiz", $quiz);
+            ->with("quiz", $quiz)
+            ->with("categories", $categories);
     }
 
     /**
