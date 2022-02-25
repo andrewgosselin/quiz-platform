@@ -86,8 +86,18 @@
 
         <script>
             var questionModal = new mdb.Modal($("#questionModal"));
-
+            var categories = @json($categories);
             $( document ).ready(function() {
+
+                $("#categorySelect").on("change", function() {
+                    if(this.value == "new_category") {
+                        $("#categoryInput").css("display", "block");
+                    } else {
+                        $("#categoryInput").css("display", "none");
+                        $("#categoryInput").val(categories[this.value]);
+                    }
+                })
+                $('.mdb-select').materialSelect();
                 $("#questionsTable").tableDnD();
                 $('#questionImageUploadButton').click(function(){ 
                     $('#questionImageUploadInput').trigger('click'); 
@@ -300,6 +310,7 @@
                 data.append('description', $("#descriptionInput").val());
                 data.append('passing_score', $("#passingScoreInput").val());
                 data.append('image_file', $('#quizImageUploadInput')[0].files[0]); 
+                data.append('category', $('#categoryInput').val());
 
 
                 if($("#nameInput").val() == "") {
@@ -357,6 +368,21 @@
         <div class="mb-3">
             <label for="nameInput" class="form-label">Name</label>
             <input type="email" class="form-control" id="nameInput" value="{{$quiz->name ?? ""}}">
+        </div>
+        <div class="mb-3">
+            <label for="categoryInput" class="form-label">Category</label>
+            <select id="categorySelect" class="form-select" aria-label="Default select example">
+                @foreach($categories as $category)
+                    @if($isEditing && \Illuminate\Support\Str::slug($quiz->category) == \Illuminate\Support\Str::slug($category))
+                        <option value="{{\Illuminate\Support\Str::slug($category)}}" selected>{{$category}}</option>
+                    @else
+                        <option value="{{\Illuminate\Support\Str::slug($category)}}">{{$category}}</option>
+                    @endif
+                    
+                @endforeach
+                <option value="new_category">New category...</option>
+            </select>
+            <input type="text" class="form-control mt-2" id="categoryInput" value="{{$quiz->category ?? ''}}" style="display:none;">
         </div>
         <div class="mb-3">
             <label for="passingScoreInput" class="form-label">Passing Score</label>

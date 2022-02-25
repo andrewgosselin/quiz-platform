@@ -13,7 +13,7 @@ class Question extends Model
     use HasFactory;
 
     protected $fillable = [
-        "quiz_id", "type", "image", "message", "choices", "select_multiple", "explanation"
+        "quiz_id", "type", "category", "image", "message", "choices", "select_multiple", "explanation"
     ];
 
     protected $casts = [

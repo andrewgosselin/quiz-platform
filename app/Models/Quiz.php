@@ -15,7 +15,7 @@ class Quiz extends Model
     use HasFactory;
 
     protected $fillable = [
-        "name", "description", "image", "questions_order", "passing_score"
+        "name", "category", "description", "image", "questions_order", "passing_score"
     ];
 
     protected $casts = [
@@ -96,5 +96,14 @@ class Quiz extends Model
 
     public function sessions() {
         return $this->hasMany(Session::class);
+    }
+
+    public static function getCategories() {
+        $rawCategories = Quiz::pluck("category");
+        $categories = [];
+        foreach($rawCategories as $category) {
+            $categories[\Illuminate\Support\Str::slug($category)] = $category;
+        }
+        return $categories;
     }
 }

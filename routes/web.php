@@ -16,6 +16,7 @@ use App\Http\Controllers\ImageUploadController;
 */
 
 Route::get('/', 'App\Http\Controllers\HomeController@index');
+Route::get('/category/{catSlug}', 'App\Http\Controllers\HomeController@category');
 Route::get('/results/{id}', "App\Http\Controllers\SessionController@results")->name('session.results');
 
 
