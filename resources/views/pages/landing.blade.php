@@ -64,7 +64,10 @@
                             <div class="col">
                                 <div class="card shadow-sm">
                                     @if($quiz->image)
-                                    <img src="/storage/quiz/{{$quiz->id}}/{{$quiz->image}}" height="225">
+                                    <div style="height: 225px; text-align: center; background-color: lightgrey; border: 1px solid lightgrey;">
+                                        <img src="/storage/quiz/{{$quiz->id}}/{{$quiz->image}}" style="height: 100%;display: block;margin-left: auto;margin-right: auto;">
+                                    </div>
+                                    
                                     @else
                                     <svg
                                         class="bd-placeholder-img card-img-top"
