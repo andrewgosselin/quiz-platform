@@ -85,6 +85,8 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/TableDnD/0.9.1/jquery.tablednd.js" integrity="sha256-d3rtug+Hg1GZPB7Y/yTcRixO/wlI78+2m08tosoRn7A=" crossorigin="anonymous"></script>
 
         <script>
+            var questionModal = new mdb.Modal($("#questionModal"));
+
             $( document ).ready(function() {
                 $("#questionsTable").tableDnD();
                 $('#questionImageUploadButton').click(function(){ 
@@ -183,13 +185,15 @@
                                 </td>
                             </tr>
                         `);
-                        $("#questionModal").modal("hide");
+                        
+                        questionModal.hide();
                         toastr.success('Question added.');
                         $("#createQuestionSubmitButton").attr("disabled", false);
                     },
                     error: function(e) {
                         $("#createQuestionSubmitButton").attr("disabled", false);
-                        $("#questionModal").modal("hide");
+                        
+                        questionModal.hide();
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
                     }
@@ -222,12 +226,14 @@
                     contentType: false,
                     processData: false,
                     success:function(data){
-                        $("#questionModal").modal("hide");
+                        
+                        questionModal.hide();
                         toastr.success('Question saved.');
                         $("#saveQuestionSubmitButton").attr("disabled", false);
                     },
                     error:function(e) {
-                        $("#questionModal").modal("hide");
+                        
+                        questionModal.hide();
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
                         $("#saveQuestionSubmitButton").attr("disabled", false);
@@ -245,7 +251,8 @@
                         openQuestionModal("edit", "/storage/question/" + data.id + "/" + data.image, data.message, data.explanation, data.type, data.choices, data.select_multiple);
                     },
                     error:function(e) {
-                        $("#questionModal").modal("hide");
+                        
+                        questionModal.hide();
                         toastr.error('Please refresh and try again.', "Something went wrong");
                         console.error(e);
                     }
@@ -281,7 +288,8 @@
                     $("#trueCorrectInput")[0].checked = extra1[0].correct == "true";
                 }
 
-                $("#questionModal").modal("show");
+                
+                questionModal.show();
             }
 
             function submitQuiz() {
