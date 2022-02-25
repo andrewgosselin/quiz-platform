@@ -38,7 +38,9 @@
          {{-- Datatables --}}
         <link rel="stylesheet" href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css"/>
         <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.bootstrap5.min.css"/>
-        
+
+        <script src="{{ asset('js/app.js') }}" defer></script>
+        <link rel="stylesheet" href="{{ asset('css/app.css') }}">
         {{ $styles ?? "" }}
         {{-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> --}}
         
