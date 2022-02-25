@@ -279,6 +279,7 @@
             -webkit-transform: translate(-50%, -50%); /* for Safari */
             background-color: white;
             position: absolute;
+            margin-top: 50px;
         }
         #questionPages {
             height: 100%;
