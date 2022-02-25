@@ -4,19 +4,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>Results</title>
+
+    @if(!isset($isEmail) || !$isEmail)
+      <!-- Font Awesome -->
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        rel="stylesheet"
+      />
+      <!-- Google Fonts -->
+      <link
+        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+        rel="stylesheet"
+      />
+      <!-- MDB -->
+      <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.css"
+        rel="stylesheet"
+      />
+      <!-- MDB -->
+      <script
+        type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.10.2/mdb.min.js"
+      ></script>
+    @endif
     <style type="text/css">
         .takenBy {
             float: left;
             height: 200px;
             width: 50%;
+            line-height: 15px;
         }
         .details {
             float: right;
             height: 200px;
             width: 50%;
+            line-height: 10px;
         }
         .detailsSection {
-            height: 400px;
+            height: 525px;
             width: 100%;
         }
         body {
@@ -349,13 +374,37 @@
         } 
       }
 
-        ol { 
+        ul { 
             font-weight: bold;
             list-style-position: inside;
             margin-left: -44px;
+            list-style-type:none;
         }
         .normal { font-weight: normal; }
 
+
+        .list-heading {
+          font-size: 11pt;
+          font-weight: 650;
+          padding: 0;
+          margin: 0;
+        }
+        .list-main-heading {
+          font-size: 13pt;
+          font-weight: 650;
+          padding: 0;
+          margin: 0;
+        }
+
+        .heading {
+          margin-bottom: 0 !important;
+        }
+
+        h5 {
+          font-size: 11pt !important;
+          font-weight: 650;
+          margin-top: 15px;
+        }
     </style>
   </head>
   <body>
@@ -375,67 +424,79 @@
                   <table role="presentation" border="0" cellpadding="0" cellspacing="0">
                     <tr>
                       <td>
-                        <h1 class="heading">Quiz Results</h1>
-                        <h3 class="sub-heading">Session {{$session->session_id}} - {{$quiz->name}}</h3>
-                        <hr>
-                        <div class="detailsSection">
+                        <h1 class="heading">Quiz Results - {{$quiz->name}}</h1>
+                        <div class="detailsSection" style="text-align:center;">
                             @if($session->score["precentage"] < $quiz->passing_score)
-                                <h1 style="color: red;">Failed (Under {{$quiz->passing_score}}%)</h1>
+                                <h2 style="color: red; margin-bottom: 30px; margin-top: 15px;">Failed (Under {{$quiz->passing_score}}%)</h2>
                             @else
-                                <h1 style="color: green;">Passed! ({{$session->score["precentage"]}}%)</h1>
+                                <h2 style="color: green; margin-bottom: 30px; margin-top: 15px;">Passed! ({{$session->score["precentage"]}}%)</h2>
                             @endif
+                            <hr style="height: 1px; background-color: gray; border: none;">
                             <div style="text-align:center;">
-                                <a href="{{url('/quizzes/' . $quiz->id . '/start?newSession')}}" target="_blank">Click to retry for a better score.</a>
+                                <h2>Details</h2>
                             </div>
-                            <br>
                             <div class="takenBy">
-                                <h5>QUIZ ID:</h5> {{$session->quiz_id}}
-                                <h5>TAKEN BY:</h5> {{$session->first_name}} {{$session->last_name}} <br><br>
+                                <h5 style="font-size: 10pt">QUIZ ID:</h5> {{$session->quiz_id}}
+                                <h5 style="font-size: 10pt">TAKEN BY:</h5> {{$session->first_name}} {{$session->last_name}} <br><br>
                                 {{$session->email}} <br><br>
                                 {{$session->phone_number}} <br><br>
-                                {{$session->address_1}} <br> {{$session->city}}
+                                {{$session->address_1}}, <br>{{$session->city}},
                                 {{$session->state}} {{$session->zip}}
                             </div>
                             <div class="details">
-                                <!-- <h5>SUBMISSION DATE:</h5> {{$session->id}} -->
-                                <h5>SESSION ID:</h5> {{$session->session_id}}
-                                <h5>SCORE PRECENTAGE:</h5> {{$session->score["precentage"]}}%
-                                <h5>SCORE TOTAL:</h5> {{$session->score["total"]}}
+                                <!-- <h5 style="font-size: 10pt">SUBMISSION DATE:</h5> {{$session->id}} -->
+                                <h5 style="font-size: 10pt">SESSION ID:</h5> {{$session->session_id}}
+                                <h5 style="font-size: 10pt">SCORE PRECENTAGE:</h5> {{$session->score["precentage"]}}%
+                                <h5 style="font-size: 10pt">SCORE TOTAL:</h5> {{$session->score["total"]}}
+                            </div>
+                            
+                            <div style="text-align:center;">
+                              @if(isset($isEmail) && $isEmail)
+                                <a href="{{url('/quizzes/' . $quiz->id . '/start?newSession')}}">Click to retry for a better score.</a>
+                              @else
+                              <hr style="height: 1px !important; background-color: gray !important; border: none !important;">
+                                <div style="padding-left: 200px; padding-right: 200px; padding-top: 250px;">
+                                  Click the button below to retry for a better score!
+                                  <a type="button" class="btn btn-primary mt-3" href="{{url('/quizzes/' . $quiz->id . '/start?newSession')}}">Retry</a>
+                                </div>
+                              @endif
                             </div>
                         </div>
-                        <hr>
-                        <h2>Questions</h2>
-                        <ol>
+                        
+                        <hr style="height: 1px; background-color: gray; border: none;">
+                        <div style="text-align:center;">
+                            <h2>Questions</h2>
+                        </div>
+                        <ul>
                             @foreach($quiz->questions as $index => $question)
-                                <li>
-                                    <label>Question</label><br>
-                                    
-                                    <div style="padding-left: 30px;">
-                                        <span class="normal">{{$question->message}}</span>
+                                <li style="padding: 20px;">
+                                    <div style="padding-bottom: 10px;">
+                                        <span class="list-main-heading"><span class="normal"><span class="list-main-heading">{{$index + 1}})</span> {{$question->message}}</span></span>
                                     </div>
-                                    <label style="margin-left: 15px;">Answer</label><br>
-                                    <div style="padding-left: 30px;">
-                                        @foreach($session->answers[$index] as $choiceIndex => $answer)
-                                            @if($answer["selected"] == "true")
-                                                <span class="normal">{{$question->choices[$choiceIndex]["choice"]}}</span><br>
-                                            @endif
-                                        @endforeach
-                                        
-                                    </div>
-                                    <label style="margin-left: 15px;">Explanation</label><br>
-                                    <div style="padding-left: 30px;">
-                                        @if($session->score["results"][$index] == true)
-                                            <span class="normal">This answer is correct.</span><br>
-                                        @else
-                                            <span class="normal">This answer is incorrect.</span><br>
-                                        @endif
-                                        <span class="normal">{{$question->explanation}}</span>
+                                    <div style="padding-left: 20px;">
+                                      <p class="list-heading">Answer</p>
+                                      <div style="padding-left: 20px;">
+                                          @foreach($session->answers[$index] as $choiceIndex => $answer)
+                                              @if($answer["selected"] == "true")
+                                                  <span class="normal">{{$question->choices[$choiceIndex]["choice"]}}</span><br>
+                                              @endif
+                                          @endforeach
+                                      </div>
+                                      <p class="list-heading">Explanation</p>
+                                      <div style="padding-left: 20px;">
+                                          @if($session->score["results"][$index] == true)
+                                              <span class="normal" style="color: green;">This answer is correct.</span><br>
+                                          @else
+                                              <span class="normal" style="color: red;">This answer is incorrect.</span><br>
+                                          @endif
+                                          <span class="normal">{{$question->explanation}}</span>
+                                      </div>
                                     </div>
                                 </li>
-                                <br>
                             @endforeach
-                        </ol>
+                        </ul>
                         <hr>
+                        <hr style="height: 1px !important; background-color: gray !important; border: none !important;">
                         <br>
                         <h5 style="color: red;">WARNING:</h5> This is a very early test document, the final quiz results page will be styled differently.
                       </td>

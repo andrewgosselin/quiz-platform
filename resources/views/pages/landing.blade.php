@@ -20,6 +20,14 @@
                     font-size: 3.5rem;
                 }
             }
+            h1 {
+                font-size: 18pt;
+                font-weight: 650 !important;
+            }
+            h3 {
+                font-size: 14pt;
+                font-weight: 650;
+            }
         </style>
     </x-slot>
 
@@ -30,8 +38,8 @@
                     <strong>Quiz Platform</strong>
                 </a>
             </div>
-            <a type="button" class="btn btn-primary" style="margin-right: 15px;" href="/admin/quizzes">
-                Admin Panel
+            <a type="button" class="btn btn-outline-light" style="margin-right: 15px;" href="/admin/quizzes">
+                {{auth()->check() ? "Admin Panel" : "Login"}}
             </a>
         </div>
     </header>
@@ -40,8 +48,8 @@
         <section class="py-5 text-center container">
             <div class="row py-lg-5">
                 <div class="col-lg-6 col-md-8 mx-auto">
-                    <h1 class="fw-light">Quizzes</h1>
-                    <p class="lead text-muted">
+                    <h1>Quizzes</h1>
+                    <p class="lead text-muted pt-2">
                         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis tellus arcu, blandit ac efficitur pretium, tempor a turpis. Morbi neque lectus, ornare in eros ut, tincidunt maximus dui. Vestibulum ullamcorper.
                     </p>
                 </div>
@@ -86,10 +94,10 @@
                                     @endif
 
                                     <div class="card-body">
-                                        <p class="card-text">
-                                            <h3>{{$quiz->name}}</h3>
+                                        <div class="card-text pb-3">
+                                            <h3 class="pb-2">{{$quiz->name}}</h3>
                                             {{$quiz->description}}
-                                        </p>
+                                        </div>
                                         <div
                                             class="
                                                 d-flex
@@ -122,13 +130,7 @@
         </div>
     </main>
 
-    <footer class="text-muted py-5">
-        <div class="container">
-            <p class="float-end mb-1">
-                <a href="#">Back to top</a>
-            </p>
-        </div>
-    </footer>
-</x-app-layout>
+</x-guest-layout>
 
+        
 

@@ -1,13 +1,14 @@
 <x-blank-layout>
     <x-slot name="scripts">
         <script>
+            var expire_date_var_name = "quiz_{{$quiz->id}}_expire_date"
             var session = @json($session ?? null);
             var endScreen = false;
             $( document ).ready(function() {
                 const queryString = window.location.search;
                 const urlParams = new URLSearchParams(queryString);
                 if(urlParams.has('newSession')) {
-                    localStorage.setItem("expire_date", null);
+                    localStorage.setItem(window.expire_date_var_name, null);
                 }
                 history.pushState(null, "", location.href.split("?")[0]);
                 if(session !== null) {
@@ -71,6 +72,7 @@
                     url: "{{ route('quizzes.complete', $quiz->id) }}",
                     data: data,
                     success:function(data){
+                        localStorage.setItem(window.expire_date_var_name, null);
                         window.location.href = "/results/" + data.session_id;
                     }
                 });
@@ -167,12 +169,12 @@
                 window.endScreen = true;
                 
                 // Get today's date and time
-                console.log(localStorage.getItem("expire_date"));
-                if(localStorage.getItem("expire_date") !== null && localStorage.getItem("expire_date") !== "null") {
-                    var date = new Date(localStorage.getItem("expire_date") * 1000) + 5 * 60000;
+                console.log(localStorage.getItem(window.expire_date_var_name));
+                if(localStorage.getItem(window.expire_date_var_name) !== null && localStorage.getItem(window.expire_date_var_name) !== "null") {
+                    var date = new Date(localStorage.getItem(window.expire_date_var_name) * 1000) + 5 * 60000;
                 } else {
                     var date = new Date().getTime() + 5 * 60000;
-                    localStorage.setItem("expire_date", Math.round(date / 1000));
+                    localStorage.setItem(window.expire_date_var_name, Math.round(date / 1000));
                 }
 
                 var countDownDate = new Date(date).getTime();
@@ -203,7 +205,7 @@
                             type:'DELETE',
                             url: "{{ route('session.destroy') }}",
                             success:function(data){
-                                localStorage.setItem("expire_date", null);
+                                localStorage.setItem(window.expire_date_var_name, null);
                                 document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
                                 window.location.href = "/";
                             }
@@ -274,8 +276,9 @@
         .stepsContainer {
             width: 50%;
             overflow:hidden;
+            min-height: 85vh;
         }
-        @media only screen and (max-width: 600px) {
+        @media only screen and (max-width: 900px) {
             .stepsContainer {
                 width: 90%;
             }

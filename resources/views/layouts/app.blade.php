@@ -60,13 +60,25 @@
                             <span class="nav_name">Quizzes</span> 
                         </a>
                         <a href="/admin/results" class="nav_link {{\Request::routeIs('session.results.index') ? "active" : ""}}"> 
-                            <i class='bx bx-user nav_icon'></i> 
+                            <i class='bx bx-copy-alt nav_icon'></i> 
                             <span class="nav_name">Results</span> 
                         </a>
+                        <hr>
                         <a href="/" class="nav_link"> 
-                            <i class='bx bx-user nav_icon'></i> 
+                            <i class='bx bx-globe nav_icon'></i> 
                             <span class="nav_name">Public Page</span> 
                         </a>
+
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+
+                            <a href="/" class="nav_link" style="position: absolute; bottom: 0px;"onclick="event.preventDefault(); this.closest('form').submit();"> 
+                                <i class='bx bx-log-out-circle nav_icon'></i> 
+                                <span class="nav_name">Logout</span> 
+                            </a>
+                        </form>
+
+                        
                     </div>
                 </div> 
                 {{-- <a href="#" class="nav_link"> 
