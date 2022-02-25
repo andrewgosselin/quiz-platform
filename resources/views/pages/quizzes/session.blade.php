@@ -132,9 +132,12 @@
                 $("#startQuizButton").css("display", "none");
                 console.log($(`.questionPage[questionIndex=${question}]`));
                 
+                
                 if(question == -5) {
                     goToEndScreen();
                 } else if($(`.questionPage[questionIndex=${question}]`).length > 0) {
+                    $("#pageCounter").css("display", "initial");
+                    $("#currentPageOutput").html(question);
                     $("#endPage").css("display", "none");
                     window.endScreen = false;
                     $("#questionPages").css("display", "initial");
@@ -189,7 +192,6 @@
                     var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                     var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                    localStorage.setItem("timer_distance", distance);
 
                     // Display the result in the element with id="demo"
                     document.getElementById("demo").innerHTML = "<b>" + minutes + "m " + seconds + "s " + "</b>";
@@ -201,6 +203,7 @@
                             type:'DELETE',
                             url: "{{ route('session.destroy') }}",
                             success:function(data){
+                                localStorage.setItem("expire_date", null);
                                 document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
                                 window.location.href = "/";
                             }
@@ -208,6 +211,7 @@
                     }
                     
                 }, 1000);
+                $("#pageCounter").css("display", "none");
                 $("#previousQuestionButton").css("display", "none");
                 $("#nextQuestionButton").css("display", "none");
                 $("#questionPages").css("display", "none");
@@ -267,20 +271,16 @@
         .card-body {
             padding: 0;
         }
-
         .stepsContainer {
-            height: 825px;
-            width: 900px;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            -ms-transform: translate(-50%, -50%); /* for IE 9 */
-            -webkit-transform: translate(-50%, -50%); /* for Safari */
-            background-color: white;
-            position: absolute;
-            margin-top: 50px;
+            width: 50%;
+            overflow:hidden;
         }
+        @media only screen and (max-width: 600px) {
+            .stepsContainer {
+                width: 90%;
+            }
+        }
+        
         #questionPages {
             height: 100%;
             width: 100%;
@@ -297,11 +297,6 @@
 
         .questionBox {
             padding: 10px;
-            height: 100px;
-        }
-        .answerBox {
-            display : table-row;
-            vertical-align : bottom;
         }
         .answers {
             padding: 10px;
@@ -320,18 +315,34 @@
             position: relative;
             text-align: center;
             margin-bottom: 10px;
+            overflow:hidden;
         }
         .questionImage img {
             width: auto;
             height: 100%;
         }
+
+        .quizContainer {
+            margin-top: 50px;
+            margin-bottom: 50px;
+        }
+
+        .card-title {
+            font-size: 14pt;
+            font-weight: 650;
+        }
+
+        #pageCounter {
+            display: none;
+        }
     </style>
 
-    <div class="pt-4">
+    <div class="quizContainer p-4 d-flex justify-content-center w-100">
 
         <div class="stepsContainer card">
-            <div class="card-header">
-                <h3>{{$quiz->name}}</h3>
+            <div class="card-header card-title">
+                {{$quiz->name}}
+                <span class="float-sm-end" id="pageCounter"><span id="currentPageOutput">0</span> / {{$quiz->questions->count()}}</span>
                 {{-- <h5>Question #0</h5> --}}
             </div>
             <div class="card-body">
@@ -342,31 +353,51 @@
                 <div id="questionPages">
                     @foreach($quiz->questions as $questionIndex => $question)
                         <div class="questionPage" questionId="{{$question->id}}" questionIndex="{{$questionIndex}}">
-                            <div class="questionBox">
-                                @if($question->image)
-                                    <div class="questionImage">
-                                        <img src="/storage/question/{{$question->id}}/{{$question->image}}"> 
-                                    </div>
-                                @endif
-                                <h5>Question #{{$questionIndex + 1}}</h5>
-                                <p>{{$question->message}}</p>
+                            <div class="row">
+                                <div class="col">
+                                    @if($question->image)
+                                        <div class="questionImage">
+                                            <img src="/storage/question/{{$question->id}}/{{$question->image}}"> 
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="answerBox">
-                                <div class="answers">
-                                    <h5>Answer</h5>
-                                    <fieldset id="questionGroup{{$questionIndex}}">
-                                        @switch($question->type)
-                                            @case("multiple_choice")
-                                                @if($question->select_multiple)
-                                                    @foreach($question->choices as $choiceIndex => $choice)
-                                                        <div class="form-check">
-                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="checkbox" value="" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                            <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                {{$choice["choice"]}}
-                                                            </label>
-                                                        </div>
-                                                    @endforeach
-                                                @else
+                            <div class="row">
+                                <div class="col">
+                                    <div class="questionBox">
+                                        <h5>Question #{{$questionIndex + 1}}</h5>
+                                        <p>{{$question->message}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="answers">
+                                        <h5>Answer</h5>
+                                        <fieldset id="questionGroup{{$questionIndex}}">
+                                            @switch($question->type)
+                                                @case("multiple_choice")
+                                                    @if($question->select_multiple)
+                                                        @foreach($question->choices as $choiceIndex => $choice)
+                                                            <div class="form-check">
+                                                                <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="checkbox" value="" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                    {{$choice["choice"]}}
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    @else
+                                                        @foreach($question->choices as $choiceIndex => $choice)
+                                                            <div class="form-check">
+                                                                <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
+                                                                    {{$choice["choice"]}}
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+                                                    @break
+                                                @case("true_false")
                                                     @foreach($question->choices as $choiceIndex => $choice)
                                                         <div class="form-check">
                                                             <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
@@ -375,21 +406,14 @@
                                                             </label>
                                                         </div>
                                                     @endforeach
-                                                @endif
-                                                @break
-                                            @case("true_false")
-                                                @foreach($question->choices as $choiceIndex => $choice)
-                                                    <div class="form-check">
-                                                        <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                        <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                            {{$choice["choice"]}}
-                                                        </label>
-                                                    </div>
-                                                @endforeach
-                                                @break
-                                        @endswitch
-                                    </fieldset>
+                                                    @break
+                                            @endswitch
+                                        </fieldset>
+                                    </div>
                                 </div>
+                            </div>
+                            <div class="answerBox">
+                                
                             </div>
                         </div>
                     @endforeach
@@ -515,8 +539,8 @@
                 </div>
             </div>
             <div class="card-footer">
-                <button type="button" class="btn btn-danger float-start" onclick="previousQuestion()" style="display: none;" id="previousQuestionButton">Previous Question</button>
-                <button type="button" class="btn btn-primary float-end" onclick="nextQuestion()" style="display: none;" id="nextQuestionButton">Next Question</button>
+                <button type="button" class="btn btn-danger float-start" onclick="previousQuestion()" style="display: none;" id="previousQuestionButton">Previous</button>
+                <button type="button" class="btn btn-primary float-end" onclick="nextQuestion()" style="display: none;" id="nextQuestionButton">Next</button>
                 <button type="button" class="btn btn-primary float-end" onclick="startQuiz()" id="startQuizButton">Start Quiz</button>
                 <button type="button" class="btn btn-success float-end" onclick="submitQuiz()" style="display: none;" id="submitQuizButton">Submit Quiz</button>
                 <button type="button" class="btn btn-success float-end" onclick="goToEndScreen()" style="display: none;" id="submitAnswersButton">Submit Answers</button>
