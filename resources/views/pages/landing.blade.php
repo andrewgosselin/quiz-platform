@@ -59,8 +59,8 @@
                         <strong>Quiz Platform</strong>
                     </a>
                 </div>
-                <a type="button" class="btn btn-primary" style="margin-right: 15px;" href="/admin/quizzes">
-                    Admin Panel
+                <a type="button" class="btn btn-outline-light" style="margin-right: 15px;" href="/admin/quizzes">
+                    {{auth()->check() ? "Admin Panel" : "Login"}}
                 </a>
             </div>
         </header>
@@ -154,7 +154,7 @@
         <footer class="text-muted py-5">
             <div class="container">
                 <p class="float-end mb-1">
-                    <a href="#">Back to top</a>
+                    <a href="#" type="button" class="btn btn-info">Back to top</a>
                 </p>
             </div>
         </footer>

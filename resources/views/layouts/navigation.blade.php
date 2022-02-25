@@ -258,6 +258,13 @@ a {
     .body-pd {
         padding-left: calc(var(--nav-width) + 188px)
     }
+    
+}
+
+.nav_list hr {
+    color: white;
+    margin-left: 20px;
+    margin-right: 5px !important;
 }
 </style>
 
