@@ -1,6 +1,5 @@
 <x-app-layout>
     <style>
-
         .choicesTableContainer {
             height: 400px;
             width: 100%;
@@ -88,16 +87,6 @@
             var questionModal = new mdb.Modal($("#questionModal"));
             var categories = @json($categories);
             $( document ).ready(function() {
-
-                $("#categorySelect").on("change", function() {
-                    if(this.value == "new_category") {
-                        $("#categoryInput").css("display", "block");
-                    } else {
-                        $("#categoryInput").css("display", "none");
-                        $("#categoryInput").val(categories[this.value]);
-                    }
-                })
-                $('.mdb-select').materialSelect();
                 $("#questionsTable").tableDnD();
                 $('#questionImageUploadButton').click(function(){ 
                     $('#questionImageUploadInput').trigger('click'); 
@@ -310,7 +299,7 @@
                 data.append('description', $("#descriptionInput").val());
                 data.append('passing_score', $("#passingScoreInput").val());
                 data.append('image_file', $('#quizImageUploadInput')[0].files[0]); 
-                data.append('category', $('#categoryInput').val());
+                data.append('category', "test");
 
 
                 if($("#nameInput").val() == "") {
@@ -369,7 +358,7 @@
             <label for="nameInput" class="form-label">Name</label>
             <input type="email" class="form-control" id="nameInput" value="{{$quiz->name ?? ""}}">
         </div>
-        <div class="mb-3">
+        {{-- <div class="mb-3">
             <label for="categoryInput" class="form-label">Category</label>
             <select id="categorySelect" class="form-select" aria-label="Default select example">
                 @foreach($categories as $category)
@@ -383,7 +372,7 @@
                 <option value="new_category">New category...</option>
             </select>
             <input type="text" class="form-control mt-2" id="categoryInput" value="{{$quiz->category ?? ''}}" style="display:none;">
-        </div>
+        </div> --}}
         <div class="mb-3">
             <label for="passingScoreInput" class="form-label">Passing Score</label>
             <input type="number" class="form-control" id="passingScoreInput" value="{{$quiz->passing_score ?? 90}}">
