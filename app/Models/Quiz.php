@@ -57,17 +57,21 @@ class Quiz extends Model
             "status" => "complete"
         ]);
 
-        // Send quiz complete email.
-        $pdf = PDF::loadView('pages.quizzes.results', [
-            "quiz" => $quiz,
-            "session" => $session
-        ]);
-        if (!file_exists(storage_path('app/public/results/' . $session->session_id))) {
-            mkdir(storage_path('app/public/results/' . $session->session_id), 0777, true);
+        try {
+            // Send quiz complete email.
+            $pdf = PDF::loadView('pages.quizzes.results', [
+                "quiz" => $quiz,
+                "session" => $session
+            ]);
+            if (!file_exists(storage_path('app/public/results/' . $session->session_id))) {
+                mkdir(storage_path('app/public/results/' . $session->session_id), 0777, true);
+            }
+            $pdf->save(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
+            Mail::to($session->email)->send(new \App\Mail\TestResults($session, $quiz));
+            unlink(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
+        } catch (\Throwable $th) {
+            //throw $th;
         }
-        $pdf->save(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
-        Mail::to($session->email)->send(new \App\Mail\TestResults($session, $quiz));
-        unlink(storage_path('app/public/results/' . $session->session_id . '/results.pdf'));
         return $session;
     }
 

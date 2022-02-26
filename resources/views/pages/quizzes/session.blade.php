@@ -32,8 +32,7 @@
                         window.session = data;
                         $("#startPage").css("display", "none");
                         $("#endPage").css("display", "none");
-                        $("#questionPages .questionPage").removeClass("active");
-                        $("#questionPages .questionPage").first().addClass("active");
+                        goToQuestion(0);
 
                         $("#previousQuestionButton").css("display", "none");
                         $("#nextQuestionButton").css("display", "initial");
@@ -139,7 +138,7 @@
                     goToEndScreen();
                 } else if($(`.questionPage[questionIndex=${question}]`).length > 0) {
                     $("#pageCounter").css("display", "initial");
-                    $("#currentPageOutput").html(question);
+                    $("#currentPageOutput").html(question + 1);
                     $("#endPage").css("display", "none");
                     window.endScreen = false;
                     $("#questionPages").css("display", "initial");
@@ -155,8 +154,12 @@
                         $("#nextQuestionButton").css("display", "none");
                         $("#submitAnswersButton").css("display", "initial");
                     } else if(question > 0) {
+                        $("#submitAnswersButton").css("display", "none");
                         $("#previousQuestionButton").css("display", "initial");
                         $("#nextQuestionButton").css("display", "initial");
+                    }
+                    if(question < ($(`.questionPage`).length - 1)) {
+                        $("#submitAnswersButton").css("display", "none");
                     }
                     if(skipUpdate == false) {
                         updateSession();
@@ -256,11 +259,11 @@
             }
         </script>
     </x-slot>
-
+    <link href="https://fonts.cdnfonts.com/css/futura-md-bt" rel="stylesheet">
     <style>
         html, body { margin: 0; padding: 0; }
         body {
-            background-color: gray;
+            background-color: #2384C6;
         }
 
         #startPage {
@@ -343,7 +346,7 @@
     <div class="quizContainer p-4 d-flex justify-content-center w-100">
 
         <div class="stepsContainer card">
-            <div class="card-header card-title">
+            <div class="card-header card-title text-center" style="font-size: 20pt;">
                 {{$quiz->name}}
                 <span class="float-sm-end" id="pageCounter"><span id="currentPageOutput">0</span> / {{$quiz->questions->count()}}</span>
                 {{-- <h5>Question #0</h5> --}}
@@ -424,10 +427,16 @@
                 <div id="endPage" style="display: none;">
                     <div class="alert alert-danger" role="alert" id="endPageError" style="display: none;"></div>
                     
-                    <div class="alert alert-warning" role="alert">
-                    <p id="demo">Loading...</p>
-                    Quiz Results Saved For A Limited Time. See If You pass or fail on the next screen.
+                    <div class="text-center" style="font-size: 15pt;">
+                        <b>Quiz Results Saved For A Limited Time. <br>See If You pass or fail on the next screen.</b>
                     </div>
+                    <br>
+                    <div class="text-center">
+                        <div class="alert alert-success text-center" role="alert" style="padding-top: 30px; padding-bottom: 20px; width: 50%; margin-left: auto; margin-right: auto;">
+                        <p id="demo" style="font-size: 30pt;">Loading...</p>
+                        </div>
+                    </div>
+                    <br>
                     <h5 class="card-title">Details</h5>
                     <div class="row mb-3">
                         <div class="col-md-6">
