@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Quiz;
 use App\Models\Session;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class QuizController extends Controller
 {
@@ -153,12 +154,31 @@ class QuizController extends Controller
                 $data["status"] = "complete";
                 $session->update($data);
                 $session = \App\Models\Quiz::score($session);
+                $this->updateExternal($session);
                 session()->put("session_id", null);
                 return $session;
             } else {
                 abort(404, "Session not found.");
             }
         }
+    }
+
+    public function updateExternal($session) {
+        $url = env("CRM_API_URL") . "/AddToList";
+        $response = Http::get($url, [
+            'F9domain' => 'Senior Healthcare Advisors',
+            'F9key' => 'number1',
+            'F9list' => 'API_devtest',
+            'first_name' => $session->first_name ?? '',
+            'last_name' => $session->last_name ?? '',
+            'email' => $session->email ?? '',
+            'street' => $session->address_1,
+            'city' => $session->city,
+            'state' => $session->state,
+            'zip' => $session->zip,
+            'number1' => $session->phone_number,
+            'F9updateCRM' => false
+        ]);
     }
 
     
