@@ -35,6 +35,8 @@
                 -moz-background-size: cover;
                 -o-background-size: cover;
                 background-size: cover;
+                backdrop-filter: blur(2px);
+                height: 100vh;
             }
         </style>
     </x-slot>
