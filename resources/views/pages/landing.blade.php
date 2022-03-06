@@ -20,6 +20,18 @@
                     font-size: 3.5rem;
                 }
             }
+
+            @media (max-width: 250px) {
+                #adminButton {
+                    display: none;
+                }
+            }
+
+            #adminButton {
+                position: absolute;
+                right: 0;
+            }
+
             h1 {
                 font-size: 18pt;
                 font-weight: 650 !important;
@@ -48,7 +60,7 @@
                     <strong>Quiz Platform</strong>
                 </a>
             </div>
-            <a type="button" class="btn btn-outline-light" style="margin-right: 15px; border-color: black !important; color: black !important;" href="/admin/quizzes">
+            <a type="button" class="btn btn-outline-light" id="adminButton" style="margin-right: 15px; border-color: black !important; color: black !important;" href="/admin/quizzes">
                 {{auth()->check() ? "Admin Panel" : "Login"}}
             </a>
         </div>

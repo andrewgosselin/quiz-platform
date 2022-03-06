@@ -164,8 +164,7 @@ class QuizController extends Controller
     }
 
     public function updateExternal($session) {
-        $url = env("CRM_API_URL") . "/AddToList";
-        $response = Http::get($url, [
+        $data = [
             'F9domain' => env('CRM_API_F9_DOMAIN', null),
             'F9key' => env('CRM_API_F9_KEY', null),
             'F9list' => env('CRM_API_F9_LIST', null),
@@ -177,8 +176,18 @@ class QuizController extends Controller
             'state' => $session->state,
             'zip' => $session->zip,
             'number1' => $session->phone_number,
-            'F9updateCRM' => env('CRM_API_UPDATE_CRM', false)
-        ]);
+            'F9updateCRM' => env('CRM_API_UPDATE_CRM', false) ? "true" : "false" 
+        ];
+        $url = env("CRM_API_URL") . "/AddToList?";
+
+        $paramsJoined = array();
+
+        foreach($data as $param => $value) {
+        $paramsJoined[] = "$param=$value";
+        }
+
+        $url .= implode('&', $paramsJoined);
+        $response = Http::get($url);
     }
 
     

@@ -176,8 +176,8 @@
                     success:function(data){
                         $("#questionsTable tbody").append(`
                             <tr questionId="${data.id}">
-                                <td>${data.message}</td>
-                                <td>${data.type}</td>
+                                <td class="message">${data.message}</td>
+                                <td class="type">${data.type}</td>
                                 <td>
                                     <a type="button" class="btn btn-primary" onclick="openEditQuestion('${data.id}')">Edit</a>
                                     <a type="button" class="btn btn-danger" onclick="deleteQuestion('${data.id}')">Delete</a>
@@ -225,7 +225,8 @@
                     contentType: false,
                     processData: false,
                     success:function(data){
-                        
+                        $(`tr[questionid='${data.id}'] .message`).html(data.message);
+                        $(`tr[questionid='${data.id}'] .type`).html(data.type);
                         questionModal.hide();
                         toastr.success('Question saved.');
                         $("#saveQuestionSubmitButton").attr("disabled", false);
@@ -401,8 +402,8 @@
                         <tbody>
                             @foreach($quiz->questions ?? [] as $index => $question)
                                 <tr questionId="{{$question->id}}">
-                                    <td>{{$question->message}}</td>
-                                    <td>{{$question->type}}</td>
+                                    <td class="message">{{$question->message}}</td>
+                                    <td class="type">{{$question->type}}</td>
                                     <td>
                                         <a type="button" class="btn btn-primary" onclick="openEditQuestion('{{$question->id}}')">Edit</a>
                                         <a type="button" class="btn btn-danger" onclick="deleteQuestion('{{$question->id}}')">Delete</a>

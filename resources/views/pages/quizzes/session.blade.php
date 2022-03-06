@@ -60,11 +60,13 @@
                 for(let i = 0; i < required.length; i++) {
                     if(data[required[i]] == "" || data[required[i]] == undefined) {
                         toastr.error("Not all required fields are filled!");
+                        $('.loading').removeClass('active');
                         return;
                     }
                 }
                 if(!$("#termsCheckbox")[0].checked) {
                     toastr.error("You must accept the terms and conditions.");
+                    $('.loading').removeClass('active');
                     return;
                 }
                 $.ajax({
