@@ -19,4 +19,4 @@ This application allows the admin to create quizzes to then link for other to ta
 
 [Demo Website](https://quiz.cyrexag.com/admin/quizzes) - Live demo website.
 
-[Demo Mobile]([https://quiz2.cyrexag.com/mobile-preview](https://quiz.cyrexag.com)) - This is a different variant of this project.
+[Demo Mobile](https://quiz2.cyrexag.com/mobile-preview) - This is a different variant of this project.
