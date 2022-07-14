@@ -30,7 +30,8 @@
             }
 
             body {
-                background: url("/images/background.jpg") no-repeat center center fixed; 
+                /** background: url("/images/background.jpg") no-repeat center center fixed;  */
+                background-color: grey;
                 -webkit-background-size: cover;
                 -moz-background-size: cover;
                 -o-background-size: cover;
