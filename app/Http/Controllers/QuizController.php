@@ -154,31 +154,12 @@ class QuizController extends Controller
                 $data["status"] = "complete";
                 $session->update($data);
                 $session = \App\Models\Quiz::score($session);
-                $this->updateExternal($session);
                 session()->put("session_id", null);
                 return $session;
             } else {
                 abort(404, "Session not found.");
             }
         }
-    }
-
-    public function updateExternal($session) {
-        $url = env("CRM_API_URL") . "/AddToList";
-        $response = Http::get($url, [
-            'F9domain' => env('CRM_API_F9_DOMAIN', null),
-            'F9key' => env('CRM_API_F9_KEY', null),
-            'F9list' => env('CRM_API_F9_LIST', null),
-            'first_name' => $session->first_name ?? '',
-            'last_name' => $session->last_name ?? '',
-            'email' => $session->email ?? '',
-            'street' => $session->address_1,
-            'city' => $session->city,
-            'state' => $session->state,
-            'zip' => $session->zip,
-            'number1' => $session->phone_number,
-            'F9updateCRM' => env('CRM_API_UPDATE_CRM', false)
-        ]);
     }
 
     

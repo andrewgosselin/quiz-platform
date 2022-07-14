@@ -615,7 +615,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Providing your number and clicking “yes,” is your electronic signature authorizing Senior Healthcare Advisors and its affiliates, agents, representatives, and service providers (collectively, “Senior Healthcare Advisors”) to send you marketing telephone calls, pre-recorded calls, text messages and emails at the number and email address you provided using an ATDS or automated system for the selection or dialing of telephone numbers. Your consent is not required as a condition of purchase. You also are confirming that you are the subscriber to, or the customary user of, the telephone number and e-mail address you provided. You may unsubscribe at any time.
+                    Insert terms here.
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
