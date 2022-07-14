@@ -52,5 +52,13 @@
                 </x-button>
             </div>
         </form>
+        @if(env("APP_ENV") == "demo")
+            <br>
+            <div style="border: 1px solid black; padding: 10px;">
+                <h3>DEMO</h3>
+                <b>User:</b> demo@user.com<br>
+                <b>Password:</b> appletree734
+            </div>
+        @endif
     </x-auth-card>
 </x-guest-layout>
