@@ -4,8 +4,6 @@
 
 This application allows the admin to create quizzes to then link for other to take and at the end they type in their information.
 
-<br>
-
 ## Links
 
 [Demo Website](https://quiz.cyrexag.com/admin/quizzes) - Live demo website.
