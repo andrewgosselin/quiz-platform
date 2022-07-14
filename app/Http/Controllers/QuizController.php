@@ -161,6 +161,5 @@ class QuizController extends Controller
             }
         }
     }
-
     
 }
