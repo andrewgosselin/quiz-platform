@@ -1,25 +1,127 @@
-<x-blank-layout>
+<x-mobile-layout>
+    <x-slot name="navigation">session</x-slot>
     <x-slot name="scripts">
         <script>
-            var expire_date_var_name = "quiz_{{$quiz->id}}_expire_date"
-            var session = @json($session ?? null);
-            var endScreen = false;
-            $( document ).ready(function() {
-                const queryString = window.location.search;
-                const urlParams = new URLSearchParams(queryString);
-                if(urlParams.has('newSession')) {
-                    localStorage.setItem(window.expire_date_var_name, null);
-                }
-                history.pushState(null, "", location.href.split("?")[0]);
-                if(session !== null) {
-                    setAnswers();
-                    goToQuestion(session.current_question, true);
-                }
+            // Hid all of the answers in the model by default.
+            var questions = @json($quiz->questions);
 
-                $("input.choice").on("change", function() {
-                    updateSession();
-                });
+            var session = @json($session ?? null);
+
+            var current_question = 0;
+
+            var answers = [];
+
+            var state = "CLEAR";
+
+            var countInterval = null;
+            var countTimeout = null;
+            var countRan = 0;
+
+
+            var timeLimitInterval = null;
+            var timeLimitRan = 0;
+
+            var submitted = false;
+
+            $( document ).ready(function() {
+                @if(!$quiz_taken)
+                    const queryString = window.location.search;
+                    const urlParams = new URLSearchParams(queryString);
+                    if(urlParams.has('newSession')) {
+                        // localStorage.setItem(window.expire_date_var_name, null);
+                    }
+                    history.pushState(null, "", location.href.split("?")[0]);
+                    if(session !== null) {
+                        loadQuestion(session.current_question);
+                    } else {
+                        $('#startScreen').addClass("active");
+                    }
+
+                    $("input.choice").on("change", function() {
+                        updateSession();
+                    });
+                @endif
+                
             });
+
+            function selectAnswer(element, index) {
+                if($(element).attr("disabled") == undefined) {
+                    console.log($(element).attr("disabled"));
+                    window.answers[window.current_question] = index;
+                    $("#choice-" + index).addClass("selected");
+                    $(".answer").attr("disabled", true);
+                    nextQuestion();
+                }
+            }
+
+            function nextQuestion() {
+                if((window.current_question + 1) < window.questions.length) {
+                    loadQuestion((window.current_question + 1));
+                } else {
+                    submitQuiz();
+                }
+            }
+
+            function loadQuestion(index, count = true) {
+                window.countRan = 0;
+                window.timeLimitRan = 0;
+                window.clearInterval(window.timeLimitInterval);
+                window.clearInterval(window.countInterval);
+                window.clearTimeout(window.countTimeout);
+                if(count) {
+                    $('#questionDelayTimerOutput').html(5 - window.countRan);
+                    window.countInterval = window.setInterval(function(){
+                        $("#startScreen").removeClass("active");
+                        $("#questionScreen").removeClass("active");
+                        $("#readyScreen").css("opacity", 0);
+                        $("#readyScreen").addClass("active");
+                        $("#readyScreen").animate({opacity: 1}, 2000);
+                        $('#questionDelayTimerOutput').html(5 - window.countRan);
+                        setTime(5 - window.countRan, 5);
+                        window.countRan++;
+                        console.log("counting", window.countRan);
+                        if(window.countRan == 6) {
+                            window.clearTimeout(window.countTimeout);
+                            loadQuestion(index, false);
+                            window.clearInterval(window.countInterval);
+                        }
+                    }, 1000);
+                } else {
+                    window.current_question = index;
+                    $('#startScreen').removeClass("active");
+                    $("#readyScreen").removeClass("active");
+                    $('#questionScreen').addClass("active");
+                    var question = window.questions[index];
+                    $('#questionImage').attr('src', `/storage/question/${question.id}/${question.image}`);
+                    $('#questionNumber').html("Question " + (index + 1));
+                    $('#questionMessage').html(question.message);
+                    $('#questionChoices').html("");
+                    for(let i = 0; i < question.choices.length; i++) {
+                        $('#questionChoices').append(`
+                            <div class="col-6 mb-3">
+                                <div id="choice-${i}" class="answer" onclick="selectAnswer(this, ${i})">
+                                    <div style="display: table-cell; vertical-align: middle;">
+                                        <div>${question.choices[i]}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    }
+                    window.timeLimitRan = 0;
+                    window.timeLimitInterval = window.setInterval(function(){
+                        $('#timeLimitTimerOutput').html(5 - window.countRan);
+                        window.timeLimitRan++;
+                        console.log("counting", window.timeLimitRan);
+                        if(window.timeLimitRan == 5) {
+                            selectAnswer(false);
+                            window.clearInterval(window.timeLimitInterval);
+                        }
+                    }, 1000);
+
+                    updateSession();
+                    document.body.scrollTop = document.documentElement.scrollTop = 0;
+                }
+            }
 
             function startQuiz() {
                 $.ajax({
@@ -30,70 +132,20 @@
                     },
                     success:function(data){
                         window.session = data;
-                        $("#startPage").css("display", "none");
-                        $("#endPage").css("display", "none");
-                        goToQuestion(0);
-
-                        $("#previousQuestionButton").css("display", "none");
-                        $("#nextQuestionButton").css("display", "initial");
-                        $("#startQuizButton").css("display", "none");
-                    }
-                });
-                
-            }
-
-            function submitQuiz() {
-                $('.loading').addClass('active');
-                let data = {
-                    answers: getAnswers(),
-                    first_name: $('#firstNameInput').val(),
-                    last_name: $('#lastNameInput').val(),
-                    email: $('#emailInput').val(),
-                    phone_number: $('#phoneNumberInput').val(),
-                    address_1: $('#addressOneInput').val(),
-                    address_2: $('#addressTwoInput').val(),
-                    city: $('#cityInput').val(),
-                    state: $('#stateInput').val(),
-                    zip: $('#zipInput').val()
-                };
-                let required = ["first_name", "last_name", "email", "phone_number"];
-                for(let i = 0; i < required.length; i++) {
-                    if(data[required[i]] == "" || data[required[i]] == undefined) {
-                        toastr.error("Not all required fields are filled!");
-                        $('.loading').removeClass('active');
-                        return;
-                    }
-                }
-                if(!$("#termsCheckbox")[0].checked) {
-                    toastr.error("You must accept the terms and conditions.");
-                    $('.loading').removeClass('active');
-                    return;
-                }
-                $.ajax({
-                    type:'POST',
-                    url: "{{ route('quizzes.complete', $quiz->id) }}",
-                    data: data,
-                    success:function(data){
-                        localStorage.setItem(window.expire_date_var_name, null);
-                        window.location.href = "/results/" + data.session_id;
-                        $('.loading').removeClass('active');
-                    },
-                    error: function(e) {
-                        $('.loading').removeClass('active');
+                        loadQuestion(0);
                     }
                 });
             }
 
             function updateSession() {
-                var current_question = window.endScreen ? -5 : parseInt($(".questionPage.active").attr("questionIndex"));
                 let data = {
-                    current_question: current_question,
-                    answers: getAnswers()
+                    current_question: window.current_question,
+                    answers: window.answers
                 };
                 console.log(data);
                 $.ajax({
                     type:'POST',
-                    url: "{{ route('session.update') }}",
+                    url: "{{ route('ajax.session.update') }}",
                     data: data,
                     success:function(data){
                         window.session = data;
@@ -102,528 +154,334 @@
                 });
             }
 
-            function checkQuestionAnswered() {
-                let answered = false;
-                $(".questionPage.active").find("input").each(function() {
-                    if(answered == false) {
-                        console.log(this.checked);
-                        answered = this.checked == true;
-                    }
-                });
-                return answered;
-            }
-
-            function nextQuestion() {
-                let questionAnswered = checkQuestionAnswered();
-                if(questionAnswered) {
-                    let current = $(".questionPage.active").attr("questionIndex");
-                    if(parseInt(current) == ($(`.questionPage`).length - 1)) {
-                        goToEndScreen();
-                    } else {
-                        goToQuestion(parseInt(current) + 1);
-                    }
-                } else {
-                    toastr.error("You must fill in an answer.");
-                }
-            }
-            function previousQuestion() {
-                let current = $(".questionPage.active").attr("questionIndex");
-                if(window.endScreen) {
-                    goToQuestion($(".questionPage").length - 1);
-                } else {
-                    goToQuestion(parseInt(current) - 1);
-                }
-            }
-
-            function goToQuestion(question, skipUpdate = false) {
-                $("#startPage").css("display", "none");
-                $("#startQuizButton").css("display", "none");
-                console.log($(`.questionPage[questionIndex=${question}]`));
-                
-                
-                if(question == -5) {
-                    goToEndScreen();
-                } else if($(`.questionPage[questionIndex=${question}]`).length > 0) {
-                    $("#pageCounter").css("display", "initial");
-                    $("#currentPageOutput").html(question + 1);
-                    $("#endPage").css("display", "none");
-                    window.endScreen = false;
-                    $("#questionPages").css("display", "initial");
-                    let current = $(".questionPage.active").attr("questionIndex");
-                    $(".questionPage").removeClass("active");
-                    $(`.questionPage[questionIndex=${question}]`).addClass("active");
-                    $('#submitQuizButton').css("display", "none");
-                    if(question == 0) {
-                        $("#previousQuestionButton").css("display", "none");
-                        $("#nextQuestionButton").css("display", "initial");
-                    } else if(question == ($(`.questionPage`).length - 1)) {
-                        $("#previousQuestionButton").css("display", "initial");
-                        $("#nextQuestionButton").css("display", "none");
-                        $("#submitAnswersButton").css("display", "initial");
-                    } else if(question > 0) {
-                        $("#submitAnswersButton").css("display", "none");
-                        $("#previousQuestionButton").css("display", "initial");
-                        $("#nextQuestionButton").css("display", "initial");
-                    }
-                    if(question < ($(`.questionPage`).length - 1)) {
-                        $("#submitAnswersButton").css("display", "none");
-                    }
-                    if(skipUpdate == false) {
-                        updateSession();
-                    }
-                }
-                
-            }
-
-            function goToEndScreen() {
-                window.endScreen = true;
-                
-                // Get today's date and time
-                console.log(localStorage.getItem(window.expire_date_var_name));
-                if(localStorage.getItem(window.expire_date_var_name) !== null && localStorage.getItem(window.expire_date_var_name) !== "null") {
-                    var date = new Date(localStorage.getItem(window.expire_date_var_name) * 1000) + 5 * 60000;
-                } else {
-                    var date = new Date().getTime() + 5 * 60000;
-                    localStorage.setItem(window.expire_date_var_name, Math.round(date / 1000));
-                }
-
-                var countDownDate = new Date(date).getTime();
-
-                console.log(countDownDate - new Date().getTime());
-
-                // Update the count down every 1 second
-                var x = setInterval(function() {
-                    
-                    // Get today's date and time
-                    var now = new Date().getTime();
-
-                    // Find the distance between now and the count down date
-                    var distance = countDownDate - now;
-                    // Time calculations for days, hours, minutes and seconds
-                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                    // Display the result in the element with id="demo"
-                    document.getElementById("demo").innerHTML = "<b>" + minutes + "m " + seconds + "s " + "</b>";
-                    
-                    // If the count down is finished, write some text
-                    if (distance < 0) {
-                        clearInterval(x);
-                        $.ajax({
-                            type:'DELETE',
-                            url: "{{ route('session.destroy') }}",
-                            success:function(data){
-                                localStorage.setItem(window.expire_date_var_name, null);
-                                document.getElementById("demo").innerHTML = "<b>EXPIRED</b>";
-                                window.location.href = "/";
-                            }
-                        });
-                    }
-                    
-                }, 1000);
-                $("#pageCounter").css("display", "none");
-                $("#previousQuestionButton").css("display", "none");
-                $("#nextQuestionButton").css("display", "none");
-                $("#questionPages").css("display", "none");
-                $(".questionPage").removeClass("active");
-                $("#endPage").css("display", "block");
-                $("#submitQuizButton").css("display", "initial");
-                $("#submitAnswersButton").css("display", "none");
-                updateSession();
-            }
-
-            function setAnswers() {
-                let answers = session.answers;
-                if(answers !== undefined && answers !== null) {
-                    console.log(answers);
-                    for(let answerIndex = 0; answerIndex < answers.length; answerIndex++) {
-                        for(let choiceIndex = 0; choiceIndex < answers[answerIndex].length; choiceIndex++) {
-                            if(answers[answerIndex][choiceIndex].selected) {
-                                console.log(`#question${answerIndex}-choice${choiceIndex}`)
-                                $(`#question${answerIndex}-choice${choiceIndex}`)[0].checked = (answers[answerIndex][choiceIndex].selected == "true");
-                            }
+            function submitQuiz() {
+                if(window.submitted == false) {
+                    window.submitted = true;
+                    $('.loading').addClass('active');
+                    let data = {
+                        answers: window.answers
+                    };
+                    $.ajax({
+                        type:'POST',
+                        url: "{{ route('ajax.quizzes.complete', $quiz->id) }}",
+                        data: data,
+                        success:function(data){
+                            console.log("results", data);
+                            updateSocial(data.user_social);
+                            $("#resultsPassed").html(`${data.session.score.passing ? "Passed" : "Failed"}`);
+                            $("#resultsPassed").css("color", `${data.session.score.passing ? "#00AB66" : "red"}`)
+                            $("#resultsPrecentage").html(`${data.session.score.precentage} %`);
+                            $("#resultsMessage").html(
+                                data.session.score.passing ?
+                                `You recieved <span style="color: yellow">{{$quiz->prize}}</span> coins.` :
+                                "You did not recieve any coins."
+                            );
+                            $('#questionScreen').removeClass('active');
+                            $('#resultsScreen').addClass('active');
+                            $('.loading').removeClass('active');
+                        },
+                        error: function(e) {
+                            $('.loading').removeClass('active');
                         }
-                        
-                    }
+                    });
                 }
             }
 
-            function getAnswers() {
-                let answers = [];
-                $(".questionPage").each(function(index) {
-                    var choices = [];
-                    $(this).find(".choice").each(function(choiceIndex) {
-                        choices[choiceIndex] = {
-                            selected: this.checked
-                        };
-                    });
-                    answers[index] = choices;
-                });
-                console.log(answers);
-                return answers;
+            function hideScreens() {
+                
+            }
+            function openScreen() {
+
+            }
+
+            function setTime(seconds, max) {
+                let amount = 475 - ((475 / 100) * (seconds / max * 100));
+                console.log(amount);
+                $("circle").animate({strokeDashoffset: amount});
+                number.innerHTML = seconds;
             }
         </script>
     </x-slot>
-    <link href="https://fonts.cdnfonts.com/css/futura-md-bt" rel="stylesheet">
-    <style>
-        html, body { margin: 0; padding: 0; }
-        body {
-            background-color: #2384C6;
-        }
 
-        #startPage {
-            padding: 10px;
-        }
-        #endPage {
-            padding: 15px;
-        }
-
-        .card-body {
-            padding: 0;
-        }
-        .stepsContainer {
-            width: 50%;
-            overflow:hidden;
-            min-height: 85vh;
-        }
-        @media only screen and (max-width: 900px) {
-            .stepsContainer {
-                width: 90%;
+    <x-slot name="styles">
+        <style>
+            .cards .item {
+                background: transparent;
+                position: relative;
+                color: white;
+                cursor: pointer;
             }
-        }
+            .item img {
+                width: 100%;
+                height: 135px;
+                border-radius: 25px;
+                margin-bottom: 5px;
+            }
+
+            .heading-1 {
+                font-size: 20pt;
+                font-weight: 650;
+                color: white;
+            }
+            .heading-2 {
+                font-size: 18pt;
+                font-weight: 600;
+                color: white;
+            }
+            .heading-3 {
+                font-size: 16pt;
+                font-weight: 550;
+                color: white;
+            }
+
+          
+            .quizImage {
+                width: 100%;
+                height: 20%;
+                background-color: gray;
+                border-radius: 25px;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.07), 
+                0 2px 4px rgba(0,0,0,0.07), 
+                0 4px 8px rgba(0,0,0,0.07), 
+                0 8px 16px rgba(0,0,0,0.07),
+                0 16px 32px rgba(0,0,0,0.07), 
+                0 32px 64px rgba(0,0,0,0.07);
+            }
+
+            .quizImage img {
+                height: 100%;
+            }
+
+            .answer {
+                background-color: white;
+                height: 100px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.07), 
+                0 2px 4px rgba(0,0,0,0.07), 
+                0 4px 8px rgba(0,0,0,0.07), 
+                0 8px 16px rgba(0,0,0,0.07),
+                0 16px 32px rgba(0,0,0,0.07), 
+                0 32px 64px rgba(0,0,0,0.07);
+                text-align: center;
+                display: table; 
+                overflow: hidden; 
+                width: 100%;
+                border-radius: 15px;
+                cursor: pointer;
+            }
+            body {
+            }
+
+            #questionScreen, #startScreen, #readyScreen, #resultsScreen {
+                display: none;
+            }
+
+            .round-time-bar {
+            overflow: hidden;
+            border-radius: 25px;
+            background-color: gray;
+            }
+            .round-time-bar div {
+            height: 10px;
+            animation: roundtime calc(var(--duration) * 1s) steps(var(--duration))
+                forwards;
+            transform-origin: left center;
+            background: linear-gradient(to bottom, red, #900);
+            border-radius: 25px;
+            }
+
+            .round-time-bar[data-style="smooth"] div {
+            animation: roundtime calc(var(--duration) * 1s) linear forwards;
+            }
+
+            @keyframes roundtime {
+            to {
+                /* More performant than `width` */
+                transform: scaleX(0);
+            }
+            }
+
+            .outputTime .output {
+                border-radius: 25px;
+                background-color: white;
+                padding: 5px;
+                padding-left: 10px;
+                padding-right: 10px;
+                width: auto;
+            }
+
+            .screen {
+                display: none;
+                opacity: 0;
+            }
+            .screen.active {
+                display: initial !important;
+                animation: fade-in 1s;
+                animation: backInLeft 1s;
+                opacity: 1;
+            }
+
+            @keyframes fade-in {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            @keyframes fade-out {
+                from {
+                    opacity: 1;
+                }
+                to {
+                    opacity: 0;
+                }
+            }
+
+            .answer.selected {
+                background-color: #4BB543;
+                color: white;
+                font-weight: 700;
+            }
+
+            
+.skill {
+  width: 160px;
+  height: 160px;
+  position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transform: -webkit-translate(-50%, -50%);
+    transform: -moz-translate(-50%, -50%);
+    transform: -ms-translate(-50%, -50%);
+}
+
+.outer {
+  height: 160px;
+  width: 160px;
+  border-radius: 50%;
+  padding: 20px;
+/*   box-shadow: 6px 6px 10px -1px rgba(0,0,0,0.15),
+              -6px -6px 10px -1px rgba(255,255,255,0.7) */
+}
+
+.inner {
+  height: 120px;
+  width: 120px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+/*   box-shadow: inset 4px 4px 6px -1px rgba(0,0,0,0.2),
+              inset -4px -4px 6px -1px rgba(255,255,255,0.7),
+              -0.5px -0.5px 0px rgba(255,255,255,1),
+              0.5px 0.5px 0px rgba(0,0,0,0.15),
+              0px 12px 10px -10px rgba(0,0,0,0.05); */
+}
+
+#number {
+  font-weight: 600px;
+  color: #555;
+}
+
+circle {
+  fill: none;
+  stroke: url(#GradientColor);
+  stroke-width: 20px;
+  stroke-dasharray: 472;
+  stroke-dashoffset: 472;
+/*   animation: anim 2s linear forwards; */
+}
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+@keyframes anim {
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+#readyScreen #number {
+    font-weight: 600;
+    font-size: 19pt;
+}
+        </style>
+    </x-slot>
+    <div class="row">
+        @if($quiz_taken)
+            <div class="col pt-2">
+                <div class="heading-2 text-danger pb-3">You have already taken this quiz.</div>
+                <a type="button" class="btn btn-success" href="/quizzes">Other quizzes</a>
+            </div>
+        @endif
+        <div class="col screen pt-2 text-center" id="startScreen">
+            <div class="quizImage text-center mb-3">
+                <img src="/storage/quiz/{{$quiz->id}}/{{$quiz->image ?? ''}}">
+            </div>
+            <div class="heading-1">{{$quiz->name}}</div>
+            <br>
+            <div class="heading-1">Are you ready to start?</div>
+            <div class="heading-3">Once you start, you can't go back.</div>
+            <br>
+            <a type="button" class="btn btn-danger" href="/quizzes">I'm not ready</a>
+            <button type="button" class="btn btn-success" onclick="startQuiz()">Start</button>
+        </div>
+        <div class="col screen pt-2" id="readyScreen">
+  <div class="skill">
+  <div class="outer">
+    <div class="inner">
+      <div id="number" class="text-light"></div>
+    </div>
+  </div>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="160px" height="160px">
+         <defs>
+            <linearGradient id="GradientColor">
+               <stop offset="0%" stop-color="#e91e63" />
+               <stop offset="100%" stop-color="#673ab7" />
+            </linearGradient>
+         </defs>
+         <circle cx="80" cy="80" r="70" stroke-linecap="round" />
+ </svg>
+</div>
+        </div>
+        <div class="col screen pt-1 text-center" id="questionScreen">
+            {{-- <div class="outputTime text-center">
+                <div class="output">0:05</div>
+            </div> --}}
+            <div class="round-time-bar mb-4" data-style="smooth" style="--duration: 5;">
+                <div></div>
+            </div>
+            <div class="quizImage text-center">
+                <img id="questionImage">
+            </div>
+            <div class="heading-2 mt-3" id="questionNumber"></div>
+            <div class="heading-3 mt-3" id="questionMessage"></div>
+            <div class="answers mt-4">
+                <div class="row" id="questionChoices">
+                </div>
+            </div>
+        </div>
+        <div class="col screen pt-1 text-center" id="resultsScreen">
+            {{-- <div class="outputTime text-center">
+                <div class="output">0:05</div>
+            </div> --}}
+            <div class="heading-1 mt-1 mb-3" id="resultsTitle">Results</div>
+            <div class="heading-2" id="resultsPassed"></div>
+            <div class="heading-2 mb-3" id="resultsPrecentage"></div>
+            <div class="heading-3 mb-4" id="resultsMessage"></div>
+            {{-- <a type="button" class="btn btn-success" href="?newSession">Retry</a> --}}
+            <a type="button" class="btn btn-danger" href="/quizzes">Back to Quizzes</a>
+        </div>
+    </div>
+</x-mobile-layout>
+
         
-        #questionPages {
-            height: 100%;
-            width: 100%;
-        }
-        .questionPage {
-            display: none;
-            border-collapse:collapse;
-            height: 100%;
-            width: 100%;
-        }
-        .questionPage.active {
-            display : table;
-        }
 
-        .questionBox {
-            padding: 10px;
-        }
-        .answers {
-            padding: 10px;
-        }
-
-        label.required:after {
-            content:" *";
-            color:red;
-        }
-
-        .questionImage {
-            width: 100%;
-            height: 160px;
-            border: 1px solid gray;
-            background-color: lightgrey;
-            position: relative;
-            text-align: center;
-            margin-bottom: 10px;
-            overflow:hidden;
-        }
-        .questionImage img {
-            width: auto;
-            height: 100%;
-        }
-
-        .quizContainer {
-            margin-top: 50px;
-            margin-bottom: 50px;
-        }
-
-        .card-title {
-            font-size: 14pt;
-            font-weight: 650;
-        }
-
-        #pageCounter {
-            display: none;
-        }
-
-
-        .loading {
-            position: fixed;
-            top: 0; right: 0;
-            bottom: 0; left: 0;
-            background-color: rgba(0,0,0,0.4);
-            display: none;
-            z-index: 99;
-        }
-        .loading.active {
-            display: block;
-        }
-        .loader {
-            left: 50%;
-            margin-left: -4em;
-            font-size: 10px;
-            border: .8em solid rgba(218, 219, 223, 1);
-            border-left: .8em solid rgba(58, 166, 165, 1);
-            animation: spin 1.1s infinite linear;
-        }
-        .loader, .loader:after {
-            border-radius: 50%;
-            width: 8em;
-            height: 8em;
-            display: block;
-            position: absolute;
-            top: 50%;
-            margin-top: -4.05em;
-        }
-
-        @keyframes spin {
-        0% {
-            transform: rotate(360deg);
-        }
-        100% {
-            transform: rotate(0deg);
-        }
-        }
-    </style>
-    <div class="loading">
-        <div class="loader"></div>
-    </div>
-    <div class="quizContainer p-4 d-flex justify-content-center w-100">
-
-        <div class="stepsContainer card">
-            <div class="card-header card-title text-center" style="font-size: 20pt;">
-                {{$quiz->name}}
-                <span class="float-sm-end" id="pageCounter"><span id="currentPageOutput">0</span> / {{$quiz->questions->count()}}</span>
-                {{-- <h5>Question #0</h5> --}}
-            </div>
-            <div class="card-body">
-                <div id="startPage">
-                    <h5 class="card-title">Description</h5>
-                    <p class="card-text">{{$quiz->description}}</p>
-                </div>
-                <div id="questionPages">
-                    @foreach($quiz->questions as $questionIndex => $question)
-                        <div class="questionPage" questionId="{{$question->id}}" questionIndex="{{$questionIndex}}">
-                            <div class="row">
-                                <div class="col">
-                                    @if($question->image)
-                                        <div class="questionImage">
-                                            <img src="/storage/question/{{$question->id}}/{{$question->image}}"> 
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="questionBox">
-                                        <h5>Question #{{$questionIndex + 1}}</h5>
-                                        <p>{{$question->message}}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    <div class="answers">
-                                        <h5>Answer</h5>
-                                        <fieldset id="questionGroup{{$questionIndex}}">
-                                            @switch($question->type)
-                                                @case("multiple_choice")
-                                                    @if($question->select_multiple)
-                                                        @foreach($question->choices as $choiceIndex => $choice)
-                                                            <div class="form-check">
-                                                                <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="checkbox" value="" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                    {{$choice["choice"]}}
-                                                                </label>
-                                                            </div>
-                                                        @endforeach
-                                                    @else
-                                                        @foreach($question->choices as $choiceIndex => $choice)
-                                                            <div class="form-check">
-                                                                <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                    {{$choice["choice"]}}
-                                                                </label>
-                                                            </div>
-                                                        @endforeach
-                                                    @endif
-                                                    @break
-                                                @case("true_false")
-                                                    @foreach($question->choices as $choiceIndex => $choice)
-                                                        <div class="form-check">
-                                                            <input class="form-check-input choice" name="questionGroup{{$questionIndex}}" choiceId="{{$choiceIndex}}" type="radio" name="flexRadioDefault" id="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                            <label class="form-check-label" for="question{{$questionIndex}}-choice{{$choiceIndex}}">
-                                                                {{$choice["choice"]}}
-                                                            </label>
-                                                        </div>
-                                                    @endforeach
-                                                    @break
-                                            @endswitch
-                                        </fieldset>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="answerBox">
-                                
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-                <div id="endPage" style="display: none;">
-                    <div class="alert alert-danger" role="alert" id="endPageError" style="display: none;"></div>
-                    
-                    <div class="text-center" style="font-size: 15pt;">
-                        <b>Quiz Results Saved For A Limited Time. <br>See If You pass or fail on the next screen.</b>
-                    </div>
-                    <br>
-                    <div class="text-center">
-                        <div class="alert alert-success text-center" role="alert" style="padding-top: 30px; padding-bottom: 20px; width: 50%; margin-left: auto; margin-right: auto;">
-                        <p id="demo" style="font-size: 30pt;">Loading...</p>
-                        </div>
-                    </div>
-                    <br>
-                    <h5 class="card-title">Details</h5>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="required" for="firstNameInput">First Name</label>
-                            <input type="text" class="form-control" id="firstNameInput" placeholder="First name">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="required" for="lastNameInput">Last name</label>
-                            <input type="text" class="form-control" id="lastNameInput" placeholder="Last name">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="required" for="emailInput">Email</label>
-                            <input type="email" class="form-control" id="emailInput" placeholder="Email">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label class="required" for="phoneNumberInput">Phone Number</label>
-                            <input type="tel" class="form-control" id="phoneNumberInput" placeholder="Phone number">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="addressOneInput">Address</label>
-                            <input type="text" class="form-control" id="addressOneInput" placeholder="1234 Main St">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col">
-                            <label for="addressTwoInput">Address 2</label>
-                            <input type="text" class="form-control" id="addressTwoInput" placeholder="Apartment, studio, or floor">
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="cityInput">City</label>
-                            <input type="text" class="form-control" id="cityInput">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="stateInput">State</label>
-                            <select id="stateInput" class="form-control">
-                                <option selected>Choose...</option>
-                                <option value="AL">Alabama</option>
-                                <option value="AK">Alaska</option>
-                                <option value="AZ">Arizona</option>
-                                <option value="AR">Arkansas</option>
-                                <option value="CA">California</option>
-                                <option value="CO">Colorado</option>
-                                <option value="CT">Connecticut</option>
-                                <option value="DE">Delaware</option>
-                                <option value="DC">District Of Columbia</option>
-                                <option value="FL">Florida</option>
-                                <option value="GA">Georgia</option>
-                                <option value="HI">Hawaii</option>
-                                <option value="ID">Idaho</option>
-                                <option value="IL">Illinois</option>
-                                <option value="IN">Indiana</option>
-                                <option value="IA">Iowa</option>
-                                <option value="KS">Kansas</option>
-                                <option value="KY">Kentucky</option>
-                                <option value="LA">Louisiana</option>
-                                <option value="ME">Maine</option>
-                                <option value="MD">Maryland</option>
-                                <option value="MA">Massachusetts</option>
-                                <option value="MI">Michigan</option>
-                                <option value="MN">Minnesota</option>
-                                <option value="MS">Mississippi</option>
-                                <option value="MO">Missouri</option>
-                                <option value="MT">Montana</option>
-                                <option value="NE">Nebraska</option>
-                                <option value="NV">Nevada</option>
-                                <option value="NH">New Hampshire</option>
-                                <option value="NJ">New Jersey</option>
-                                <option value="NM">New Mexico</option>
-                                <option value="NY">New York</option>
-                                <option value="NC">North Carolina</option>
-                                <option value="ND">North Dakota</option>
-                                <option value="OH">Ohio</option>
-                                <option value="OK">Oklahoma</option>
-                                <option value="OR">Oregon</option>
-                                <option value="PA">Pennsylvania</option>
-                                <option value="RI">Rhode Island</option>
-                                <option value="SC">South Carolina</option>
-                                <option value="SD">South Dakota</option>
-                                <option value="TN">Tennessee</option>
-                                <option value="TX">Texas</option>
-                                <option value="UT">Utah</option>
-                                <option value="VT">Vermont</option>
-                                <option value="VA">Virginia</option>
-                                <option value="WA">Washington</option>
-                                <option value="WV">West Virginia</option>
-                                <option value="WI">Wisconsin</option>
-                                <option value="WY">Wyoming</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="zipInput">Zip</label>
-                            <input type="text" class="form-control" id="zipInput">
-                        </div>
-
-                        <div class="form-group mt-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="termsCheckbox" required>
-                                <label class="form-check-label" for="termsCheckbox">
-                                    Agree to <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">terms and conditions</a>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button type="button" class="btn btn-danger float-start" onclick="previousQuestion()" style="display: none;" id="previousQuestionButton">Previous</button>
-                <button type="button" class="btn btn-primary float-end" onclick="nextQuestion()" style="display: none;" id="nextQuestionButton">Next</button>
-                <button type="button" class="btn btn-primary float-end" onclick="startQuiz()" id="startQuizButton">Start Quiz</button>
-                <button type="button" class="btn btn-success float-end" onclick="submitQuiz()" style="display: none;" id="submitQuizButton">Submit Quiz</button>
-                <button type="button" class="btn btn-success float-end" onclick="goToEndScreen()" style="display: none;" id="submitAnswersButton">Submit Answers</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Insert terms here.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <br>
-</x-blank-layout>

@@ -65,7 +65,9 @@ class QuestionController extends Controller
     {
         $quiz = Quiz::findOrFail($id);
         $question = $quiz->unordered_questions()->findOrFail($question_id ?? -1);
-        return $question->toArray();
+        $output = $question->toArray();
+        $output["choices"] = $question->raw_choices;
+        return $output;
     }
 
     /**

@@ -14,13 +14,15 @@ class CreateQuizzesTable extends Migration
     public function up()
     {
         Schema::create('quizzes', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
+            $table->string("slug");
             $table->string("name");
-            $table->string("category");
+            $table->string("category_id");
             $table->string("image")->nullable();
-            $table->string("description")->default("");
+            $table->string("description")->nullable();
             $table->json("questions_order")->nullable();
             $table->integer("passing_score")->default(90);
+            $table->integer("prize")->default(0);
             $table->timestamps();
         });
     }

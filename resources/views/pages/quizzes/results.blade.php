@@ -476,30 +476,29 @@
                                     <div style="padding-left: 20px;">
                                       <p class="list-heading">Answer</p>
                                       <div style="padding-left: 20px;">
-                                          @if(array_key_exists($index, $session->answers))
-
-                                            @foreach($session->answers[$index] as $choiceIndex => $answer)
-                                                @if($answer["selected"] == "true")
-                                                    <span class="normal">{{$question->choices[$choiceIndex]["choice"]}}</span><br>
-                                                @endif
-                                            @endforeach
-                                          @endif
+                                          @foreach($session->answers[$index] as $choiceIndex => $answer)
+                                              @if($answer["selected"] == "true")
+                                                  <span class="normal">{{$question->choices[$choiceIndex]["choice"]}}</span><br>
+                                              @endif
+                                          @endforeach
                                       </div>
                                       <p class="list-heading">Explanation</p>
                                       <div style="padding-left: 20px;">
-                                        @if(array_key_exists($index, $session->score["results"]))
                                           @if($session->score["results"][$index] == true)
                                               <span class="normal" style="color: green;">This answer is correct.</span><br>
                                           @else
                                               <span class="normal" style="color: red;">This answer is incorrect.</span><br>
                                           @endif
                                           <span class="normal">{{$question->explanation}}</span>
-                                        @endif
                                       </div>
                                     </div>
                                 </li>
                             @endforeach
                         </ul>
+                        <hr>
+                        <hr style="height: 1px !important; background-color: gray !important; border: none !important;">
+                        <br>
+                        <h5 style="color: red;">WARNING:</h5> This is a very early test document, the final quiz results page will be styled differently.
                       </td>
                     </tr>
                   </table>

@@ -7,6 +7,8 @@ use App\Models\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+use App\Models\Category;
+
 class QuizController extends Controller
 {
     /**
@@ -17,7 +19,7 @@ class QuizController extends Controller
     public function index()
     {
         $quizzes = Quiz::all();
-        return view('pages.quizzes.index')
+        return view('pages.admin.quizzes.index')
             ->with("quizzes", $quizzes);
     }
 
@@ -28,8 +30,8 @@ class QuizController extends Controller
      */
     public function create()
     {
-        $categories = Quiz::getCategories();
-        return view('pages.quizzes.form')
+        $categories = Category::all();
+        return view('pages.admin.quizzes.form')
             ->with("isEditing", false)
             ->with("categories", $categories);
     }
@@ -51,9 +53,14 @@ class QuizController extends Controller
      * @param  \App\Models\Quiz  $quiz
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show($category_id, $id)
     {
-        //
+        $quiz = \App\Models\Quiz::where('category_id', $category_id)->where('slug', $id)->first();
+        if($quiz == null) {
+            abort(404);
+        }
+        return view('pages.quizzes.show')
+            ->with('quiz', $quiz);
     }
 
     /**
@@ -65,8 +72,8 @@ class QuizController extends Controller
     public function edit($id)
     {
         $quiz = Quiz::findOrFail($id);
-        $categories = Quiz::getCategories();
-        return view('pages.quizzes.form')
+        $categories = Category::all();
+        return view('pages.admin.quizzes.form')
             ->with("isEditing", true)
             ->with("quiz", $quiz)
             ->with("categories", $categories);
@@ -121,25 +128,31 @@ class QuizController extends Controller
         $quiz->delete();
     }
 
-    public function start($id) {
-        $quiz = Quiz::findOrFail($id);
-        if($quiz->questions->count() == 0) {
-            abort(404, "This quiz has no questions.");
+    public function take($category_id, $id) {
+        $quiz = \App\Models\Quiz::where('category_id', $category_id)->where('slug', $id)->first();
+        if($quiz == null) {
+            abort(404);
         }
-        if(session()->has("session_id")) {
-            $session = Session::where("session_id", session()->get("session_id"))->first();
-            if($session) {
-                if(request()->has("newSession")) {
-                    $session->delete();
-                    $session = null;
-                    session()->put("session_id", null);
-                } else {
-                    $session = ($session->status == "completed" || $session->quiz_id !== (int)$id) ? null : $session;
-                }
-            }
+        $quizTaken = auth()->user()->is_admin ? false : auth()->user()->takenQuiz($quiz->id);
+        // if(session()->has("session_id")) {
+        //     $session = auth()->user()->active_sessions->first();
+        //     if($session) {
+        //         if(request()->has("newSession")) {
+        //             $session->delete();
+        //             $session = null;
+        //             session()->put("session_id", null);
+        //         } else {
+        //             $session = ($session->status == "complete" || $session->quiz_id !== $quiz->id) ? null : $session;
+        //         }
+        //     }
+        // }
+        session()->put("session_id", null);
+        foreach(auth()->user()->active_sessions as $activeSession) {
+            $activeSession->delete();
         }
         return view("pages.quizzes.session")
             ->with("quiz", $quiz)
+            ->with("quiz_taken", $quizTaken)
             ->with("session", $session ?? null);
     }
 
@@ -154,6 +167,7 @@ class QuizController extends Controller
                 $data["status"] = "complete";
                 $session->update($data);
                 $session = \App\Models\Quiz::score($session);
+                // $this->updateExternal($session);
                 session()->put("session_id", null);
                 return $session;
             } else {
@@ -161,5 +175,24 @@ class QuizController extends Controller
             }
         }
     }
+
+    public function updateExternal($session) {
+        $url = env("CRM_API_URL") . "/AddToList";
+        $response = Http::get($url, [
+            'F9domain' => env('CRM_API_F9_DOMAIN', null),
+            'F9key' => env('CRM_API_F9_KEY', null),
+            'F9list' => env('CRM_API_F9_LIST', null),
+            'first_name' => $session->first_name ?? '',
+            'last_name' => $session->last_name ?? '',
+            'email' => $session->email ?? '',
+            'street' => $session->address_1,
+            'city' => $session->city,
+            'state' => $session->state,
+            'zip' => $session->zip,
+            'number1' => $session->phone_number,
+            'F9updateCRM' => env('CRM_API_UPDATE_CRM', false)
+        ]);
+    }
+
     
 }

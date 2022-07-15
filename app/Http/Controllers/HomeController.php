@@ -7,13 +7,8 @@ use Illuminate\Http\Request;
 class HomeController extends Controller
 {
     public function index() {
-        if(env("PUBLIC_PAGE") == false) {
-            return redirect("/admin/quizzes");
-        }
-        $quizzes = \App\Models\Quiz::all();
-        $categories = \App\Models\Quiz::getCategories();
-        return view("pages.landing")
-            ->with("quizzes", $quizzes)
+        $categories = \App\Models\Category::all();
+        return view("pages.quizzes.index")
             ->with("categories", $categories);
     }
 

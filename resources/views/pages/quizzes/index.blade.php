@@ -1,59 +1,68 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Quizzes') }}
-        </h2>
-    </x-slot>
-
+<x-mobile-layout>
     <x-slot name="scripts">
         <script>
-            function deleteQuiz(id) {
-                $.ajax({
-                    type:'DELETE',
-                    url:"{{ route('quizzes.delete') }}/" + id,
-                    success:function(data){
-                        $("#quiz-" + id).remove();
-                        toastr.error('Quiz has been deleted.');
-                    },
-                    error:function(e) {
-                        toastr.error('Please refresh and try again.', "Something went wrong");
-                        console.error(e);
-                    }
-                });
-            }
+            $(".item").on("click", function () {
+                let url = $(this).attr("quiz-url");
+                window.location.href = url;
+            });
         </script>
     </x-slot>
 
-    <div class="pt-4">
-        <div class="quizList pb-5">
-            <a type="button" class="btn btn-success mb-4" href="/admin/quizzes/create">New Quiz</a>
-            <table class="table table-striped datatable">
-                <thead>
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Questions</th>
-                        <th scope="col">Active Sessions</th>
-                        <th scope="col">Completed Sessions</th>
-                        <th scope="col"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($quizzes as $quiz)
-                        <tr id="quiz-{{$quiz->id}}">
-                            <td>{{$quiz->name}}</td>
-                            <td>{{$quiz->questions->count()}}</td>
-                            <td>{{$quiz->sessions->where("status", "in progress")->count()}}</td>
-                            <td>{{$quiz->sessions->where("status", "complete")->count()}}</td>
-                            <td>
-                                <a type="button" class="btn btn-primary" href="/admin/quizzes/{{$quiz->id}}">Edit</a>
-                                <a type="button" class="btn btn-info" href="/quizzes/{{$quiz->id}}/start?newSession" target="_blank">Take</a>
-                                {{-- <a type="button" class="btn btn-info">Share</a> --}}
-                                <a type="button" class="btn btn-danger" onclick="deleteQuiz('{{$quiz->id}}')">Delete</a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    <x-slot name="styles">
+        <style>
+            .cards .item {
+                background: transparent;
+                position: relative;
+                color: white;
+                cursor: pointer;
+            }
+            .item img {
+                width: 100%;
+                height: 135px;
+                border-radius: 25px;
+                margin-bottom: 5px;
+            }
+
+            .heading-1 {
+                font-size: 18pt;
+                font-weight: 650;
+                color: white;
+            }
+
+            * {
+                -moz-user-select: none;
+                -khtml-user-select: none;
+                -webkit-user-select: none;
+
+                /*
+                    Introduced in Internet Explorer 10.
+                    See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+                */
+                -ms-user-select: none;
+                user-select: none;
+            }
+
+            .item.disabled img {
+                opacity: 0.4;
+                filter: alpha(opacity=40); /* msie */
+            }
+            
+        </style>
+    </x-slot>
+
+    <div class="mb-3" style="height: 50px;">
+        <div class="heading-1 float-start">Start playing now!</div>
+        {{-- <a type="button" class="btn btn-danger float-end" href="/quizzes">Back</a> --}}
     </div>
-</x-app-layout>
+    <section class="cards row">
+        @foreach($categories as $category)
+            <div class="item col-md-2 col-sm-6 col-6 text-center" quiz-url="/quizzes/{{$category->id}}">
+                <img src="/storage/category/{{$category->id}}/{{$category->image ?? ''}}">
+                <h4>{{$category->name}}</h4>
+            </div>
+        @endforeach
+    </section>
+</x-mobile-layout>
+
+        
+

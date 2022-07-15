@@ -55,14 +55,18 @@
             <nav class="nav">
                 <div> <a href="#" class="nav_logo"> <i class='bx bx-layer nav_logo-icon'></i> <span class="nav_logo-name">Quiz Platform</span> </a>
                     <div class="nav_list">
+                        <a href="/admin/categories" class="nav_link {{\Request::routeIs('categories') ? "active" : ""}}"> 
+                            <i class='bx bx-user nav_icon'></i> 
+                            <span class="nav_name">Categories</span> 
+                        </a>
                         <a href="/admin/quizzes" class="nav_link {{\Request::routeIs('quizzes') ? "active" : ""}}"> 
                             <i class='bx bx-user nav_icon'></i> 
                             <span class="nav_name">Quizzes</span> 
                         </a>
-                        <a href="/admin/results" class="nav_link {{\Request::routeIs('session.results.index') ? "active" : ""}}"> 
+                        {{-- <a href="/admin/results" class="nav_link {{\Request::routeIs('session.results.index') ? "active" : ""}}"> 
                             <i class='bx bx-copy-alt nav_icon'></i> 
                             <span class="nav_name">Results</span> 
-                        </a>
+                        </a> --}}
                         <hr>
                         <a href="/" class="nav_link"> 
                             <i class='bx bx-globe nav_icon'></i> 

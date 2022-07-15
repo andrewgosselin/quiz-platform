@@ -12,18 +12,20 @@ use Illuminate\Support\Facades\Mail;
 
 class Quiz extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        "name", "category", "description", "image", "questions_order", "passing_score"
+        "name", "category_id", "slug", "description", "image", "questions_order", "passing_score", "prize"
     ];
 
     protected $casts = [
         "questions_order" => "array"
     ];
 
-    public function share() {
-        
+    protected static function boot()
+    {
+        parent::boot();
+        self::creating(function ($model) {
+            $model->slug = \Illuminate\Support\Str::slug($model->name);
+        });
     }
 
     public static function score($session) {
@@ -31,10 +33,10 @@ class Quiz extends Model
         $results = [];
         $amountCorrect = 0;
         foreach($quiz->questions as $questionIndex => $question) {
-            foreach($question->choices as $choiceIndex => $choice) {
+            foreach($question->raw_choices as $choiceIndex => $choice) {
                 if($choice["correct"] == "true") {
                     if(array_key_exists($questionIndex, $session->answers)) {
-                        $selected = $session->answers[$questionIndex][$choiceIndex]["selected"] == "true";
+                        $selected = $choiceIndex == $session->answers[$questionIndex];
                         $results[$questionIndex] = $selected;
                     } else {
                         $results[$questionIndex] = false;
@@ -47,15 +49,24 @@ class Quiz extends Model
                 $amountCorrect++;
             }
         }
+        $precentage = $amountCorrect / $quiz->questions->count() * 100;
+        $passing = ($precentage) >= $quiz->passing_score;
+
         $session->update([
             "score" => [
                 "correct" => $amountCorrect,
-                "precentage" => $amountCorrect / $quiz->questions->count() * 100,
+                "precentage" => $precentage,
                 "total" => $amountCorrect . " / " . $quiz->questions->count(),
-                "results" => $results
+                "results" => $results,
+                "passing" => $passing
             ],
             "status" => "complete"
         ]);
+
+        if($passing) {
+            auth()->user()->social->addCoins($quiz->prize);
+            auth()->user()->social->addXp(450);
+        }
 
         try {
             // Send quiz complete email.
@@ -72,18 +83,26 @@ class Quiz extends Model
         } catch (\Throwable $th) {
             //throw $th;
         }
-        return $session;
+        $social = auth()->user()->social->toArray();
+        $social["level"] = auth()->user()->social->level;
+        $social["current_xp"] = auth()->user()->social->current_xp;
+        $social["total_xp"] = auth()->user()->social->total_xp;
+        return [
+            "session" => $session,
+            "user_social" => $social
+        ];
     }
 
     public function getQuestionsAttribute() {
+        $questions = $this->unordered_questions->makeHidden(['choices.correct']);
         if ( ! is_null($this->questions_order)) {
             $order = $this->questions_order;
             $list = $this->unordered_questions->sortBy(function($model) use ($order){
                 return array_search($model->getKey(), $order);
             });
-            return collect($list->values());
+            $questions =  collect($list->values());
         }
-        return $this->unordered_questions;
+        return $questions;
     }
 
     public function getQuestionsOrderAttribute($value) {
@@ -100,14 +119,5 @@ class Quiz extends Model
 
     public function sessions() {
         return $this->hasMany(Session::class);
-    }
-
-    public static function getCategories() {
-        $rawCategories = Quiz::pluck("category");
-        $categories = [];
-        foreach($rawCategories as $category) {
-            $categories[\Illuminate\Support\Str::slug($category)] = $category;
-        }
-        return $categories;
     }
 }

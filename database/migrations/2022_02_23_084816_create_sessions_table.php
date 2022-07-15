@@ -17,6 +17,7 @@ class CreateSessionsTable extends Migration
             $table->id();
             $table->string("session_id");
             $table->integer("quiz_id");
+            $table->integer("user_id");
             $table->string("status")->default("in progress");
             $table->integer("current_question")->default(0);
             $table->json("answers")->nullable();

@@ -20,6 +20,14 @@ class Session extends Model
         "secondary_information" => "array"
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+        self::creating(function ($model) {
+            $model->user_id = auth()->user()->id;
+        });
+    }
+
     public function quiz() {
         return $this->belongsTo(Quiz::class);
     }
